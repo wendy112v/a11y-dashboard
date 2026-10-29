@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>접근성 실태조사 취합 대시보드</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f4f6fa;--card:#fff;--ink:#1c2a3e;--mut:#6b7a90;--line:#dde3ec;--pri:#1f5fbf;--pri2:#e8f0fc;--ok:#1a7f4b;--warn:#b86e00;--err:#c0392b}
+html{color-scheme:light}*{box-sizing:border-box}
+body{margin:0;font:14px/1.5 -apple-system,"Malgun Gothic","Apple SD Gothic Neo",sans-serif;background:var(--bg);color:var(--ink);display:flex;min-height:100vh}
+nav{width:200px;background:#13294b;color:#cfe0fa;padding:16px 0;flex:none}
+nav h1{font-size:15px;color:#fff;margin:0 16px 16px;line-height:1.3}
+nav a{display:block;padding:10px 16px;color:inherit;text-decoration:none;cursor:pointer}
+nav a.on{background:#1f5fbf;color:#fff}
+main{flex:1;min-width:0;padding:20px}
+h2{margin:0 0 14px;font-size:20px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+.card b{display:block;font-size:24px;color:var(--pri)}.card span{color:var(--mut);font-size:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:12px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px;margin-bottom:12px}
+.panel h3{margin:0 0 2px;font-size:14px}.sub{color:var(--mut);font-size:12px;margin-bottom:8px}
+.bar{display:flex;align-items:center;gap:8px;margin:4px 0;font-size:12px}
+.bar i{flex:none;width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-style:normal}
+.bar div{flex:1;background:#edf1f7;height:14px;border-radius:3px}.bar div u{display:block;height:100%;background:var(--pri);border-radius:3px}
+.bar em{flex:none;width:80px;font-style:normal;color:var(--mut)}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
+input,select,button,textarea{font:inherit;padding:6px 9px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink)}
+button{cursor:pointer}button.p{background:var(--pri);color:#fff;border-color:var(--pri)}button.d{color:var(--err)}
+.tw{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;font-size:12px;white-space:nowrap;width:100%}
+th,td{padding:6px 9px;border-bottom:1px solid var(--line);text-align:left}
+th{background:#f0f4fa;cursor:pointer;position:sticky;top:0}tr.r:hover{background:var(--pri2);cursor:pointer}
+.tag{padding:2px 8px;border-radius:10px;font-size:11px;background:#e8edf5}
+.s-검수완료{background:#dcf3e6;color:var(--ok)}.s-확인필요,.s-검수대기{background:#fdf0d5;color:var(--warn)}.s-오류{background:#fadbd8;color:var(--err)}
+.smp{background:#ece6f7;color:#5b3fa0}
+.drop{border:2px dashed #9db8e3;background:var(--pri2);border-radius:8px;padding:30px;text-align:center}
+.note{background:#fff8e6;border:1px solid #f1d58a;border-radius:6px;padding:8px 12px;margin:8px 0;font-size:13px}
+.modal{position:fixed;inset:0;background:#0007;display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:20px;z-index:20}
+.mb{background:#fff;border-radius:10px;padding:18px;width:min(860px,100%)}
+.f{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.f label{font-size:11px;color:var(--mut);display:block}.f input{width:100%}
+.iss{color:var(--err);font-size:12px;margin:2px 0}.wrn{color:var(--warn);font-size:12px;margin:2px 0}
+.hint{color:var(--mut);font-size:12px}
+@media(max-width:760px){body{flex-direction:column}nav{width:auto;display:flex;flex-wrap:wrap;padding:6px}nav h1{display:none}}
+</style></head><body>
+<nav><h1>접근성 실태조사<br>취합 대시보드</h1>
+<a data-v="dash">대시보드</a><a data-v="list">조사 결과</a><a data-v="pdf">PDF 업로드</a><a data-v="imp">데이터 가져오기</a><a data-v="rev">검수 관리</a><a data-v="rep">보고서</a></nav>
+<main id="m"></main><div id="md"></div>
+<script>
+const G=[["corp","법인","t"],["svc","서비스명","t"],["plat","플랫폼","t"],["round","조사 회차","t"],["date","업데이트 일자","t"],
+["e_issues","전문가 이슈 수","e"],["e_pages","페이지 수","e"],["e_a","인식의 용이성","e"],["e_b","운용의 용이성","e"],["e_c","이해의 용이성","e"],["e_d","견고성","e"],["e_total","전문가 합계(100점)","e"],
+["u_issues","사용자 이슈 수","u"],["u_tasks","과업 수","u"],
+["bl_s","전맹 성공","u"],["bl_m","전맹 미흡","u"],["bl_f","전맹 실패","u"],["bl_r","전맹 성공률(%)","u"],
+["lo_s","저시력 성공","u"],["lo_m","저시력 미흡","u"],["lo_f","저시력 실패","u"],["lo_r","저시력 성공률(%)","u"],
+["up_s","상지 성공","u"],["up_m","상지 미흡","u"],["up_f","상지 실패","u"],["up_r","상지 성공률(%)","u"],["u_avg","평균 성공률(%)","u"],["etc","기타 조사 정보","t"]];
+const TXT=["corp","svc","plat","round","date","etc"],ST=["추출 중","검수 대기","확인 필요","검수 완료","오류"],PG=10;
+const LB=Object.fromEntries(G.map(g=>[g[0],g[1]]));
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const num=v=>{if(v===""||v==null)return null;const n=parseFloat(String(v).replace(/[,%\s]/g,""));return isNaN(n)?null:n};
+const $=s=>document.querySelector(s);
+let R=[],S={q:"",corp:"",plat:"",st:"",smp:true,sort:"",dir:1,pg:0,hide:{e:false,u:false}},IM=null,uid=1;
+const stamp=()=>new Date().toLocaleString("ko-KR");
+function save(){try{localStorage.setItem("sv_recs",JSON.stringify(R))}catch(e){}}
+function load(){try{const x=JSON.parse(localStorage.getItem("sv_recs"));if(x&&x.length){R=x;uid=Math.max(...R.map(r=>r.id))+1;return}}catch(e){}seed()}
+function seed(){const D=[["한국","메신저A","iOS",82,70,[20,22,18,20]],["한국","메신저A","Android",75,64],["한국","쇼핑B","iOS",68,55],["한국","쇼핑B","Android",71,59],["미국","스트리밍C","iOS",90,80],["미국","스트리밍C","Windows",64,48],["일본","뱅킹D","Android",77,66],["일본","뱅킹D","Mac",59,41]];
+R=D.map((d,i)=>{const t=d[3],s=10+i,m=3,f=2,tk=s+m+f;const r=mk({corp:d[0],svc:d[1],plat:d[2],round:"2025-1차",date:"2025-06-"+(10+i),e_issues:12+i,e_pages:30,e_a:Math.round(t*.27),e_b:Math.round(t*.27),e_c:Math.round(t*.23),e_d:t-Math.round(t*.27)*2-Math.round(t*.23),e_total:t,u_issues:5,u_tasks:tk,bl_s:s,bl_m:m,bl_f:f,bl_r:d[4],lo_s:s+1,lo_m:2,lo_f:f,lo_r:d[4]+3,up_s:s+2,up_m:1,up_f:f,up_r:d[4]+6,u_avg:d[4]+3});r.sample=true;r.status=i<5?"검수 완료":i<7?"검수 대기":"확인 필요";if(i==7)r.e_total=50;return r});save()}
+function mk(o){const r={id:uid++,sample:false,status:"확인 필요",file:"",hist:[]};G.forEach(g=>r[g[0]]=o[g[0]]??"");return Object.assign(r,{hist:[{t:stamp(),m:"등록"}]})}
+const key=r=>[r.corp,r.svc,r.plat,r.round].map(x=>String(x).trim()).join("|");
+function check(r){const e=[],w=[];["corp","svc","plat"].forEach(k=>{if(!String(r[k]).trim())e.push(LB[k]+" 누락")});
+if(R.some(o=>o.id!==r.id&&key(o)===key(r)))e.push("중복: 같은 법인·서비스·플랫폼·회차가 이미 있음");
+const p=["e_a","e_b","e_c","e_d"].map(k=>num(r[k])),t=num(r.e_total);
+if(r.max&&p.every(x=>x!=null)&&t!=null){const c=p.reduce((a,b)=>a+b,0)/r.max.s*100;if(Math.abs(c-t)>.15)w.push(`전문가 합계: 기재 ${t} ↔ 보고서 산식(항목합÷적용배점합×100) ${c.toFixed(1)}`)}
+if(!String(r.round).trim())w.push("조사 회차 미입력");
+if(t==null)w.push("전문가 합계 미기재 (규칙 미확정으로 자동 계산하지 않음)");
+[["bl","전맹"],["lo","저시력"],["up","상지"]].forEach(([k,n])=>{const s=num(r[k+"_s"]),m=num(r[k+"_m"]),f=num(r[k+"_f"]),rt=num(r[k+"_r"]);
+if(s!=null&&m!=null&&f!=null){if(num(r.u_tasks)!=null&&s+m+f!==num(r.u_tasks))w.push(`${n}: 성공+미흡+실패(${s+m+f})≠과업 수(${r.u_tasks})`);
+const c=s/(s+m+f)*100;if(rt!=null&&Math.abs(c-rt)>.5)w.push(`${n}: 기재 성공률 ${rt}% ↔ 참고 계산 ${c.toFixed(1)}% (성공÷전체 가정, 확정값 아님)`)}
+if(rt==null)w.push(n+" 성공률 미기재")});if(r.ext)Object.entries(r.ext).forEach(([k,o])=>{const c=num(r[k]);if(c!=null&&Math.abs(c-o.v)>1e-6)w.push(`${LB[k]}: 현재 ${c} ↔ PDF ${o.v}${o.calc?" (참고 계산)":""} (p.${o.p})`)});return{e,w}}
+function derived(r){return r.status==="검수 완료"}
+const vis=()=>R.filter(r=>S.smp||!r.sample);
+function filt(){const q=S.q.toLowerCase();let a=vis().filter(r=>(!S.corp||r.corp===S.corp)&&(!S.plat||r.plat===S.plat)&&(!S.st||r.status===S.st)&&(!q||[r.corp,r.svc,r.plat,r.round,r.file].join(" ").toLowerCase().includes(q)));
+if(S.sort)a=[...a].sort((x,y)=>{let p=x[S.sort],q2=y[S.sort];const n1=num(p),n2=num(q2);return(n1!=null&&n2!=null?n1-n2:String(p).localeCompare(String(q2),"ko"))*S.dir});return a}
+const uniq=k=>[...new Set(R.map(r=>r[k]).filter(Boolean))].sort();
+const avg=(a,k)=>{const v=a.map(r=>num(r[k])).filter(x=>x!=null);return v.length?{v:v.reduce((x,y)=>x+y,0)/v.length,n:v.length}:null};
+function bars(title,unit,rows,max){return`<div class="panel"><h3>${title}</h3><div class="sub">단위: ${unit} · 검수 완료 데이터의 기재값 단순 평균</div>${rows.map(([l,a])=>a?`<div class="bar"><i title="${esc(l)}">${esc(l)}</i><div><u style="width:${Math.min(100,a.v/max*100)}%"></u></div><em>${a.v.toFixed(1)} (n=${a.n})</em></div>`:`<div class="bar"><i>${esc(l)}</i><em>데이터 없음</em></div>`).join("")||'<div class="hint">검수 완료 데이터가 없습니다.</div>'}</div>`}
+const views={
+dash(){const a=vis(),c=a.filter(derived),by=(k,f)=>uniq(k).map(x=>[x,avg(c.filter(r=>r[k]===x),f)]);
+const prog=uniq("corp").map(x=>{const t=a.filter(r=>r.corp===x);return[x,{v:t.filter(derived).length/t.length*100,n:t.length}]});
+return`<h2>대시보드</h2><div class="note">확정 통계는 <b>검수 완료</b> 데이터만 반영합니다. ${S.smp?"샘플 데이터 포함 중 (조사 결과 화면에서 끌 수 있음)":""} 전문가 점수와 사용자 성공률은 의미가 달라 합산하지 않습니다.</div>
+<div class="cards">${[["전체 법인",new Set(a.map(r=>r.corp)).size],["전체 서비스",new Set(a.map(r=>r.corp+r.svc)).size],["플랫폼별 조사 건수",a.length],["전문가 테스트 완료",c.filter(r=>num(r.e_total)!=null).length],["사용자 테스트 완료",c.filter(r=>num(r.u_avg)!=null||num(r.bl_r)!=null).length],["검수 대기",a.filter(r=>r.status==="검수 대기").length],["확인 필요·오류",a.filter(r=>r.status==="확인 필요"||r.status==="오류").length]].map(x=>`<div class="card"><b>${x[1]}</b><span>${x[0]}</span></div>`).join("")}</div>
+<div class="grid">${bars("법인별 전문가 테스트 합계","점",by("corp","e_total"),100)}${bars("플랫폼별 전문가 테스트 점수","점",by("plat","e_total"),100)}
+${bars("서비스별 전문가 테스트 합계","점",uniq("svc").map(x=>[x,avg(c.filter(r=>r.svc===x),"e_total")]),100)}${bars("플랫폼별 사용자 테스트 평균 성공률","%",by("plat","u_avg"),100)}
+${bars("장애 유형별 성공률","%",[["시각장애(전맹)",avg(c,"bl_r")],["시각장애(저시력)",avg(c,"lo_r")],["지체장애(상지)",avg(c,"up_r")]],100)}${bars("조사 회차별 전문가 합계","점",by("round","e_total"),100)}
+${bars("법인별 검수 완료 비율","% (n=조사 건수)",prog,100)}</div>`},
+list(){const a=filt(),pages=Math.max(1,Math.ceil(a.length/PG));S.pg=Math.min(S.pg,pages-1);const cols=G.filter(g=>!S.hide[g[2]]);
+const sel=(k,l,v)=>`<select data-f="${k}"><option value="">${l} 전체</option>${v.map(x=>`<option ${S[k]===x?"selected":""}>${esc(x)}</option>`).join("")}</select>`;
+return`<h2>조사 결과</h2><div class="tools"><input id="q" placeholder="키워드 검색" value="${esc(S.q)}">${sel("corp","법인",uniq("corp"))}${sel("plat","플랫폼",uniq("plat"))}<select data-f="st"><option value="">검수 상태 전체</option>${ST.map(x=>`<option ${S.st===x?"selected":""}>${x}</option>`).join("")}</select>
+<label><input type="checkbox" id="smp" ${S.smp?"checked":""}> 샘플 포함</label><label><input type="checkbox" data-h="e" ${S.hide.e?"":"checked"}> 전문가 열</label><label><input type="checkbox" data-h="u" ${S.hide.u?"":"checked"}> 사용자 열</label><button class="p" id="add">+ 직접 등록</button><button id="xl">현재 필터 엑셀</button></div>
+<div class="tw"><table><thead><tr><th>번호</th>${cols.map(g=>`<th data-s="${g[0]}">${g[1]}${S.sort===g[0]?(S.dir>0?" ▲":" ▼"):""}</th>`).join("")}<th>검수 상태</th></tr></thead><tbody>${a.slice(S.pg*PG,S.pg*PG+PG).map(r=>`<tr class="r" data-id="${r.id}"><td>${r.id}${r.sample?' <span class="tag smp">샘플</span>':""}</td>${cols.map(g=>`<td>${esc(r[g[0]])}</td>`).join("")}<td><span class="tag s-${r.status.replace(" ","")}">${r.status}</span></td></tr>`).join("")||`<tr><td colspan="40">결과가 없습니다.</td></tr>`}</tbody></table></div>
+<div class="tools" style="margin-top:8px"><button id="pv">이전</button>${S.pg+1} / ${pages} (총 ${a.length}건)<button id="nx">다음</button></div>`},
+pdf(){return`<h2>PDF 업로드</h2><div class="note"><b>안내:</b> 이 프로토타입은 서버가 없어 PDF 본문 추출·OCR을 수행하지 <b>못합니다</b>. 업로드하면 파일 정보를 가진 빈 조사 건이 '확인 필요'로 만들어지고, 값은 검수 화면에서 PDF를 보며 직접 입력합니다. 실제 자동 추출은 서버 측 OCR/추출 API(Supabase Edge Function 등) 연동이 필요합니다.</div>
+<div class="drop" id="dz">PDF 파일을 여기에 끌어다 놓거나 선택하세요 (최대 20MB)<br><br><input type="file" id="pf" accept="application/pdf,.pdf" multiple></div><div id="pmsg"></div>`},
+imp(){if(!IM)return`<h2>데이터 가져오기 (XLSX · XLSM · CSV)</h2><div class="note">시트 '결과상세_원본'이 있으면 열 매핑이 자동 적용되고(성공률 소수는 %로 환산, 합계 행 제외), '결과요약_서비스법인단위' 등 요약 시트는 개별 데이터로 가져오지 않습니다. 그 외 파일은 열을 직접 연결합니다. 기존 취합 엑셀을 올리면 열 매핑 → 미리보기 → 저장 순서로 진행합니다. 총계·요약 행은 자동 제외하며 원본 값은 변경하지 않습니다.</div><div class="drop"><input type="file" id="xf" accept=".xlsx,.xlsm,.xls,.csv"></div>`;
+const H=IM.head,opt=i=>`<option value="">(연결 안 함)</option>${H.map((h,j)=>`<option value="${j}" ${i==j?"selected":""}>${j+1}. ${esc(h)}</option>`).join("")}`;
+const rows=importRows();return`<h2>데이터 가져오기 — ${esc(IM.name)}</h2><div class="panel"><h3>1. 열 매핑</h3><div class="f">${G.map(g=>`<div><label>${g[1]}</label><select data-m="${g[0]}">${opt(IM.map[g[0]])}</select></div>`).join("")}</div></div>
+<div class="panel"><h3>2. 미리보기 (가져올 ${rows.ok.length}건 · 제외 ${rows.skip}건 · 중복/누락 ${rows.bad.length}건)</h3>${rows.bad.map(b=>`<div class="iss">${b}</div>`).join("")}<div class="tw"><table><tr>${G.slice(0,12).map(g=>`<th>${g[1]}</th>`).join("")}</tr>${rows.ok.slice(0,8).map(r=>`<tr>${G.slice(0,12).map(g=>`<td>${esc(r[g[0]])}</td>`).join("")}</tr>`).join("")}</table></div></div>
+<button class="p" id="go">3. ${rows.ok.length}건 저장 (검수 대기)</button> <button id="cn">취소</button>`},
+rev(){const a=R.filter(r=>r.status!=="검수 완료");return`<h2>검수 관리</h2><div class="note">검수 완료 전까지 데이터는 확정 통계에 반영되지 않습니다. 행을 눌러 값을 수정하고 검수하세요.</div><div class="tw"><table><tr><th>번호</th><th>법인/서비스/플랫폼</th><th>파일</th><th>상태</th><th>확인 사항</th></tr>${a.map(r=>{const c=check(r);return`<tr class="r" data-id="${r.id}"><td>${r.id}</td><td>${esc(r.corp)} / ${esc(r.svc)} / ${esc(r.plat)}</td><td>${esc(r.file)}</td><td><span class="tag s-${r.status.replace(" ","")}">${r.status}</span></td><td>오류 ${c.e.length} · 경고 ${c.w.length}</td></tr>`}).join("")||'<tr><td colspan="5">검수할 항목이 없습니다.</td></tr>'}</table></div>`},
+rep(){return`<h2>보고서 · 다운로드</h2><div class="panel"><div class="tools">${[["all","전체 데이터 (엑셀)"],["csv","전체 데이터 (CSV)"],["corp","법인별 요약"],["svc","서비스별 요약"],["plat","플랫폼별 요약"],["round","조사 회차별 결과"],["err","검수 오류·확인 필요 목록"]].map(x=>`<button data-d="${x[0]}">${x[1]}</button>`).join("")}</div><div class="hint">요약 시트는 검수 완료 데이터의 기재값 평균이며, 전문가 점수와 사용자 성공률은 별도 열로 둡니다. 파일은 저장 확인창에서 허용해야 받아집니다.</div></div>`}};
+function importRows(){const ok=[],bad=[];let skip=0;const seen=new Set();IM.rows.forEach((row,i)=>{const o={};G.forEach(g=>{const j=IM.map[g[0]];o[g[0]]=j===""||j==null?"":(TXT.includes(g[0])?String(row[j]??"").trim():(row[j]??""))});
+if(/총계|합계|소계|평균|요약/.test(o.corp+o.svc)||(!o.corp&&!o.svc&&!o.plat)){skip++;return}
+if(IM.pct)["bl_r","lo_r","up_r","u_avg"].forEach(k=>{const n=num(o[k]);if(n!=null&&n<=1.0000001)o[k]=+(n*100).toFixed(4)});if(IM.round&&!o.round)o.round=IM.round;if(IM.date&&!o.date)o.date=IM.date;const r=mk(o);r.file=IM.name;r.status="검수 대기";r.id=-i-1;const c=check(r);c.e.forEach(x=>bad.push(`${i+2}행: ${x}`));const k=key(r);if(seen.has(k))bad.push(`${i+2}행: 가져오는 파일 내 중복`);seen.add(k);ok.push(r)});return{ok,bad,skip}}
+function guess(H){const m={};const A={corp:/법인/,svc:/서비스/,plat:/플랫폼/,round:/회차/,date:/일자|날짜/,etc:/기타/,e_pages:/페이지/,e_a:/인식/,e_b:/운용/,e_c:/이해/,e_d:/견고/,u_tasks:/과업|task/i,u_avg:/평균/};
+G.forEach(g=>{const i=H.findIndex(h=>A[g[0]]&&A[g[0]].test(h));if(i>=0)m[g[0]]=i});return m}
+function render(){const v=(location.hash||"#dash").slice(1);const k=views[v]?v:"dash";document.querySelectorAll("nav a").forEach(a=>a.classList.toggle("on",a.dataset.v===k));$("#m").innerHTML=views[k]();bind(k)}
+function bind(k){const m=$("#m");
+if(k==="list"){$("#q").oninput=e=>{S.q=e.target.value;S.pg=0;const p=e.target.selectionStart;render();const q=$("#q");q.focus();q.setSelectionRange(p,p)};m.querySelectorAll("[data-f]").forEach(s=>s.onchange=e=>{S[s.dataset.f]=e.target.value;S.pg=0;render()});$("#smp").onchange=e=>{S.smp=e.target.checked;render()};m.querySelectorAll("[data-h]").forEach(c=>c.onchange=e=>{S.hide[c.dataset.h]=!e.target.checked;render()});
+m.querySelectorAll("[data-s]").forEach(t=>t.onclick=()=>{S.dir=S.sort===t.dataset.s?-S.dir:1;S.sort=t.dataset.s;render()});$("#pv").onclick=()=>{S.pg=Math.max(0,S.pg-1);render()};$("#nx").onclick=()=>{S.pg++;render()};$("#add").onclick=()=>edit(null);$("#xl").onclick=()=>exp("filter")}
+if(k==="list"||k==="rev")m.querySelectorAll("tr.r").forEach(t=>t.onclick=()=>edit(+t.dataset.id));
+if(k==="pdf"){const f=$("#pf"),dz=$("#dz");f.onchange=()=>pdfs([...f.files]);dz.ondragover=e=>e.preventDefault();dz.ondrop=e=>{e.preventDefault();pdfs([...e.dataTransfer.files])}}
+if(k==="imp"){if(!IM){$("#xf").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const wb=XLSX.read(await f.arrayBuffer(),{type:"array",cellDates:true});const P0=wb.Sheets["결과상세_원본"];if(P0){const A=XLSX.utils.sheet_to_json(P0,{header:1,defval:"",raw:true});const hi=A.findIndex(r=>r[1]==="번호");if(hi<0)throw 0;const FI=["corp","svc","plat","e_issues","e_pages","e_a","e_b","e_c","e_d","e_total","u_issues","u_tasks","bl_s","bl_m","bl_f","bl_r","lo_s","lo_m","lo_f","lo_r","up_s","up_m","up_f","up_r","u_avg"],map={};FI.forEach((k,i)=>map[k]=i+2);const head=A[hi+2].map((h,i)=>String(h||A[hi+1][i]||A[hi][i]||"열"+(i+1)).replace(/\s+/g," "));const m=/(\d{4})\s*(상반기|하반기)/.exec(A[0][0]||""),dv=A[hi+1][29];IM={name:f.name,head,rows:A.slice(hi+3),map,pct:true,round:m?m[1]+" "+m[2]:"",date:dv instanceof Date?dv.toISOString().slice(0,10):"",preset:true};render();return}const A=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:""});let hi=A.findIndex(r=>r.filter(x=>x!=="").length>=3);if(hi<0)throw 0;const head=A[hi].map((h,i)=>String(h||"열"+(i+1)));IM={name:f.name,head,rows:A.slice(hi+1),map:guess(head)};render()}catch(x){alert("파일을 읽지 못했습니다. XLSX 또는 CSV 형식을 확인하세요.")}}}
+else{m.querySelectorAll("[data-m]").forEach(s=>s.onchange=e=>{IM.map[s.dataset.m]=e.target.value===""?"":+e.target.value;render()});$("#cn").onclick=()=>{IM=null;render()};
+$("#go").onclick=()=>{const x=importRows();let n=0;x.ok.forEach(r=>{if(R.some(o=>key(o)===key(r)))return;r.id=uid++;R.push(r);n++});save();alert(`${n}건 저장 (중복 ${x.ok.length-n}건 제외). 검수 관리에서 확인하세요.`);IM=null;location.hash="rev"}}}
+if(k==="rep")m.querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>exp(b.dataset.d))}
+function pdfs(fs){const msg=[];fs.forEach(f=>{if(!/\.pdf$/i.test(f.name)||f.type&&f.type!=="application/pdf")return msg.push(`${f.name}: PDF만 가능합니다.`);if(f.size>20*1048576)return msg.push(`${f.name}: 20MB 초과`);
+if(R.some(r=>r.file===f.name+"|"+f.size))return msg.push(`${f.name}: 이미 등록된 파일입니다.`);const r=mk({});r.file=f.name+"|"+f.size;r.status="확인 필요";r.hist.push({t:stamp(),m:"PDF 업로드 — 자동 추출 미수행(서버 OCR 미연동), 수동 입력 필요"});R.push(r);msg.push(`${f.name}: 등록됨 (확인 필요 · 값 비어 있음)`)});save();$("#pmsg").innerHTML=msg.map(x=>`<div class="note">${esc(x)}</div>`).join("")+'<a href="#rev">검수 관리로 이동</a>'}
+function edit(id){const n=id==null,r=n?mk({}):R.find(x=>x.id===id);const c=check(r);
+$("#md").innerHTML=`<div class="modal"><div class="mb"><h3>${n?"조사 결과 등록":`조사 결과 #${r.id}`} ${r.sample?'<span class="tag smp">샘플</span>':""}</h3>${r.file?`<div class="hint">원본 파일: ${esc(r.file.split("|")[0])} (브라우저 프로토타입은 파일 본문을 보관하지 않으므로 원본 PDF를 따로 열어 대조하세요)</div>`:""}
+${c.e.map(x=>`<div class="iss">⛔ ${esc(x)}</div>`).join("")}${c.w.map(x=>`<div class="wrn">⚠ ${esc(x)}</div>`).join("")}
+<div class="f" style="margin:10px 0">${G.map(g=>`<div><label>${g[1]}</label><input data-k="${g[0]}" value="${esc(r[g[0]])}" ${r[g[0]]===""?'style="background:#fff3cd"':""}></div>`).join("")}<div><label>검수 상태</label><select id="est">${ST.map(x=>`<option ${r.status===x?"selected":""}>${x}</option>`).join("")}</select></div></div>
+<div class="hint">노란 칸은 비어 있는 값입니다. 빈 값은 임의로 채우지 않습니다.</div>
+<div class="tools" style="margin-top:10px"><button class="p" id="sv">저장</button><button id="ok">검수 완료로 저장</button><button id="hd">보류(확인 필요)</button>${n?"":'<button class="d" id="dl">삭제</button>'}<button id="cl">닫기</button></div>
+<details><summary>수정 이력 (${r.hist.length})</summary>${r.hist.map(h=>`<div class="hint">${esc(h.t)} — ${esc(h.m)}</div>`).join("")}</details></div></div>`;
+const cl=()=>{$("#md").innerHTML=""};$("#cl").onclick=cl;
+const go=st=>{const o=Object.assign({},r,{hist:[...r.hist]});const ch=[];document.querySelectorAll("[data-k]").forEach(i=>{const k=i.dataset.k,v=TXT.includes(k)?i.value.trim():i.value.trim();if(String(o[k])!==v){ch.push(`${LB[k]}: '${o[k]}' → '${v}'`);o[k]=v}});
+if(st&&st!==o.status){ch.push(`상태: ${o.status} → ${st}`);o.status=st}
+const cc=check(o);if(o.status==="검수 완료"&&cc.e.length){alert("검수 완료 불가:\n"+cc.e.join("\n"));return}
+if(ch.length)o.hist.push({t:stamp(),m:(n?"등록 · ":"수정 · ")+ch.join("; ")});if(n){o.id=uid++;R.push(o)}else R[R.findIndex(x=>x.id===id)]=o;save();cl();render()};
+$("#sv").onclick=()=>go($("#est").value);$("#ok").onclick=()=>go("검수 완료");$("#hd").onclick=()=>go("확인 필요");
+if(!n)$("#dl").onclick=()=>{const b=$("#dl");if(b.dataset.c!=="1"){b.dataset.c="1";b.textContent="정말 삭제하려면 한 번 더 클릭 (되돌릴 수 없음)";return}R=R.filter(x=>x.id!==id);save();cl();render()}}
+function summ(k,rs){return uniq(k).map(x=>{const t=rs.filter(r=>r[k]===x),c=t.filter(derived),e=avg(c,"e_total"),u=avg(c,"u_avg");return{[LB[k]||"조사 회차"]:x,"조사 건수":t.length,"검수 완료 건수":c.length,"전문가 합계 평균(점)":e?+e.v.toFixed(1):"","사용자 평균 성공률 평균(%)":u?+u.v.toFixed(1):"","전맹 성공률 평균(%)":avg(c,"bl_r")?+avg(c,"bl_r").v.toFixed(1):"","저시력 성공률 평균(%)":avg(c,"lo_r")?+avg(c,"lo_r").v.toFixed(1):"","상지 성공률 평균(%)":avg(c,"up_r")?+avg(c,"up_r").v.toFixed(1):""}})}
+const detail=rs=>rs.map((r,i)=>Object.assign({"번호":i+1},Object.fromEntries(G.map(g=>[g[1],r[g[0]]])),{"검수 상태":r.status,"구분":r.sample?"샘플":"실데이터"}));
+async function exp(t){const wb=XLSX.utils.book_new(),rs=t==="filter"?filt():vis(),add=(n,d)=>XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(d.length?d:[{"안내":"데이터 없음"}]),n);let name="조사결과";
+if(t==="csv"){const csv="\ufeff"+XLSX.utils.sheet_to_csv(XLSX.utils.json_to_sheet(detail(rs)));return dl(new Blob([csv],{type:"text/csv"}),name+".csv")}
+if(t==="err"){add("확인 필요 목록",rs.flatMap(r=>{const c=check(r);return(r.status==="확인 필요"||r.status==="오류"||c.e.length)?[...c.e.map(x=>({번호:r.id,법인:r.corp,서비스:r.svc,플랫폼:r.plat,구분:"오류",내용:x})),...c.w.map(x=>({번호:r.id,법인:r.corp,서비스:r.svc,플랫폼:r.plat,구분:"경고",내용:x}))]:[]}));name="검수오류목록"}
+else if(["corp","svc","plat","round"].includes(t)){add("요약",summ(t,rs));add("상세 데이터",detail(rs));name="요약_"+t}
+else{add("상세 데이터",detail(rs));add("법인별 요약",summ("corp",rs));add("플랫폼별 요약",summ("plat",rs))}
+dl(new Blob([XLSX.write(wb,{type:"array",bookType:"xlsx"})]),name+".xlsx")}
+async function dl(blob,fn){let d=null;try{d=await claude.use("downloads")}catch(e){}if(!d){const u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download=fn;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000);return}try{await d.save({filename:fn,data:blob})}catch(e){if(e&&e.code!=="declined")alert("저장 실패: "+(e.message||e.code))}}
+document.querySelectorAll("nav a").forEach(a=>a.onclick=()=>{location.hash=a.dataset.v});addEventListener("hashchange",render);
+window.alert=m=>{const d=document.createElement("div");d.textContent=m;d.style.cssText="position:fixed;left:50%;top:16px;transform:translateX(-50%);background:#13294b;color:#fff;padding:10px 16px;border-radius:8px;z-index:50;white-space:pre-line;max-width:90vw";document.body.appendChild(d);setTimeout(()=>d.remove(),5000)};
+const RL=(()=>{try{return JSON.parse(localStorage.getItem("sv_rule"))}catch(e){}return null})()||{w:0.5,ok:false};
+const PD=new Map();
+if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+document.addEventListener("change",e=>{if(e.target.id==="rw")RL.w=+e.target.value;if(e.target.id==="rok")RL.ok=e.target.checked;if(e.target.id==="rw"||e.target.id==="rok")try{localStorage.setItem("sv_rule",JSON.stringify(RL))}catch(x){}});
+const J=s=>s.replace(/\s+/g," ").trim();
+const TY={전맹:"bl",저시력:"lo",상지:"up"};
+function parsePdf(P,RL){
+ const out={vals:{},max:null,notes:[],warn:[]};const set=(k,v,p,c)=>out.vals[k]={v,p,calc:!!c};
+ const c1=J(P[0]||"");
+ out.kind=/사용자\s*평가/.test(c1)?"user":/전문가\s*평가/.test(c1)?"expert":"";
+ if(!out.kind)throw new Error("표지에서 '사용자 평가/전문가 평가'를 찾지 못했습니다(지원하지 않는 양식).");
+ const sv=/([가-힣A-Za-z0-9]+)\(v?([\d.]+)\)/.exec(c1);if(sv){out.svc=sv[1];out.ver=sv[2]}
+ const pl=/평가\s*(iOS|Android|Windows|Mac|Web)/i.exec(c1);if(pl)out.plat=pl[1];
+ const d=/(\d{4})\.\s*(\d{1,2})\.\s*(\d{1,2})/.exec(c1);if(d)out.date=`${d[1]}-${d[2].padStart(2,"0")}-${d[3].padStart(2,"0")}`;
+ if(!out.svc||!out.plat)out.warn.push("서비스명 또는 플랫폼을 표지에서 인식하지 못했습니다.");
+ if(out.kind==="user"){
+  const T=new Map(),I=[];let sec="";
+  P.forEach((tx,i)=>{const L=tx.split("\n").map(J);
+   const m=L.map(l=>/과업\s*(\d+)\s*[:：]\s*(.+)/.exec(l)).find(Boolean);
+   if(m&&!T.has(+m[1])){const o={};L.forEach(l=>{const q=/^(전맹|저시력|상지)\s*(?:시각|지체)?\s*장애인\s+(.+)$/.exec(l);if(q){const t=/불편사항이 없|특별한/.test(q[2])?"s":/불편한 사항|가능하나/.test(q[2])?"m":/불가/.test(q[2])?"f":null;if(t)o[TY[q[1]]]=t}});if(Object.keys(o).length===3)T.set(+m[1],{o,p:i+1})}
+   if(/결과 상세/.test(tx))L.forEach(l=>{const s=/^(전맹|저시력|상지)\s*(?:시각|지체)?\s*장애인$/.exec(l);if(s)sec=TY[s[1]];const q=/^\d+\s*\[(\d+)\]\s*(.+)$/.exec(l);if(q&&sec)I.push({t:sec,c:q[1],x:q[2],p:i+1})})});
+  if(!T.size)throw new Error("과업별 수행 결과 페이지를 찾지 못했습니다.");
+  const ps=(P.findIndex(t=>/과업 준수율|결과 분석/.test(t))+1)||3;
+  const tot=/총\s*(\d+)\s*개\s*과업/.exec(P.join("\n"));if(tot&&+tot[1]!==T.size)out.warn.push(`요약의 총 과업 수(${tot[1]})와 과업별 페이지 수(${T.size})가 다릅니다.`);
+  set("u_tasks",T.size,ps);
+  const pc=[...(P[ps-1]||"").matchAll(/(\d+)\s*%\s*성공/g)].map(x=>+x[1]),rates=[];
+  ["bl","lo","up"].forEach(k=>{const c={s:0,m:0,f:0};[...T.values()].forEach(t=>c[t.o[k]]++);
+   ["s","m","f"].forEach(z=>set(k+"_"+z,c[z],ps));
+   const n=c.s+c.m+c.f,sp=Math.round(c.s/n*100);if(pc.length&&!pc.includes(sp))out.warn.push(`${k}: 성공 ${sp}%가 요약 페이지 표기와 일치하지 않습니다.`);
+   const r=+((c.s+RL.w*c.m)/n*100).toFixed(2);rates.push(r);set(k+"_r",r,ps,true)});
+  set("u_avg",+(rates.reduce((a,b)=>a+b,0)/3).toFixed(2),ps,true);
+  out.notes.push(`보고서에 기재된 이슈 ${I.length}건 (Jira 건수와 다를 수 있어 이슈 수 칸은 채우지 않음)`);out.issues=I;
+ }else{
+  const i0=P.findIndex(t=>/전문가 평가 페이지/.test(t));let n=0;
+  if(i0>=0){for(let i=i0;i<P.length&&!/점수 산정 방법/.test(P[i]);i++)P[i].split("\n").map(J).forEach(l=>{const q=/^(\d+)\s+\S/.exec(l);if(q&&+q[1]===n+1)n++});if(n)set("e_pages",n,i0+1)}
+  const ir=P.findIndex(t=>/전체 결과[\s\S]*검사 항목별/.test(t)&&/[\d.]+\s*\/\s*[\d.]+/.test(t));
+  if(ir<0)throw new Error("'전체 결과' 점수표를 찾지 못했습니다.");
+  const tx=J(P[ir]),sec=tx.slice(tx.indexOf("전체 결과"),tx.indexOf("검사 항목별"));let sum=0,mx=0;const mm={};
+  const lb=[...sec.matchAll(/(인식의|운용의|이해의)\s*용이성|견고성/g)].map(m=>({"인식의":"a","운용의":"b","이해의":"c"}[m[1]]||"d")),pr=[...sec.matchAll(/([\d.]+)\s*\/\s*([\d.]+)/g)];
+  if(lb.length!==4||pr.length!==4)throw new Error("전체 결과의 항목 4개와 점수 4개를 짝지을 수 없습니다(양식 확인 필요).");
+  lb.forEach((k,i)=>{set("e_"+k,+pr[i][1],ir+1);mm[k]=+pr[i][2];sum+=+pr[i][1];mx+=+pr[i][2]});
+  const h=sec.replace(/[\d.]+\s*\/\s*[\d.]+/g," ");
+  const t=/(?:^|\s)(\d{1,3}(?:\.\d+)?)(?=\s|$)/.exec(h);
+  if(t){set("e_total",+t[1],ir+1);if(mx){const c=sum/mx*100;if(Math.abs(c-+t[1])>.15)out.warn.push(`보고서 합계 ${t[1]}와 산식(항목합÷적용배점합×100)=${c.toFixed(1)}이 다릅니다.`)}}else out.warn.push("합계 점수(100점)를 찾지 못했습니다.");
+  out.max={s:mx,...mm};
+  out.notes.push(`보고서의 오류 항목 페이지 ${P.filter(t=>/오류 항목/.test(t)).length}건 (Jira 건수와 다를 수 있어 이슈 수 칸은 채우지 않음)`);
+ }
+ return out}
+
+async function readPdf(file){if(!window.pdfjsLib)throw new Error("PDF 라이브러리를 불러오지 못했습니다.");const doc=await pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise,P=[];
+for(let i=1;i<=doc.numPages;i++){const tc=await(await doc.getPage(i)).getTextContent();const it=tc.items.filter(t=>t.str.trim()).map(t=>({s:t.str.trim(),x:t.transform[4],y:t.transform[5]})).sort((a,b)=>b.y-a.y||a.x-b.x),L=[];it.forEach(t=>{const l=L[L.length-1];if(l&&Math.abs(l.y-t.y)<3)l.t.push(t);else L.push({y:t.y,t:[t]})});P.push(L.map(l=>l.t.sort((a,b)=>a.x-b.x).map(t=>t.s).join(" ")).join("\n"))}
+if(P.join("").length<50)throw new Error("텍스트 레이어가 없는 스캔 PDF입니다. OCR은 서버 연동이 필요해 이 프로토타입에서는 처리하지 못합니다.");return{doc,P}}
+function attach(res,file){const sig=file.name+"|"+file.size;let rec=R.find(r=>r.svc===res.svc&&r.plat===res.plat&&!r.sample),isNew=false;
+if(!rec){rec=mk({svc:res.svc,plat:res.plat,corp:(R.find(r=>r.svc===res.svc&&r.corp)||{}).corp||"",date:res.date});R.push(rec);isNew=true}
+rec.ext=rec.ext||{};rec.files=rec.files||[];rec.files.push(sig);if(res.max)rec.max=res.max;const ap=[],df=[];
+Object.entries(res.vals).forEach(([k,o])=>{rec.ext[k]={v:o.v,p:o.p,f:file.name,calc:o.calc};if(o.calc&&!RL.ok)return;const c=rec[k];if(c===""||c==null){rec[k]=o.v;ap.push(LB[k])}else if(num(c)!=null&&Math.abs(num(c)-o.v)>1e-6)df.push(LB[k])});
+if(!rec.date&&res.date)rec.date=res.date;rec.hist.push({t:stamp(),m:`PDF 반영(${file.name}) · 채움: ${ap.join(", ")||"없음"} · 기존값과 다름: ${df.join(", ")||"없음"}`});
+if(isNew||df.length)rec.status="확인 필요";else if(rec.status!=="검수 완료")rec.status="검수 대기";save();return{rec,isNew,ap,df}}
+pdfs=async function(fs){const box=$("#pmsg");box.innerHTML="";for(const f of fs){const add=(h,c)=>box.insertAdjacentHTML("beforeend",`<div class="${c||"note"}">${h}</div>`);
+if(!/\.pdf$/i.test(f.name))return add(esc(f.name)+": PDF만 가능합니다.");if(f.size>20*1048576){add(esc(f.name)+": 20MB 초과");continue}
+const sig=f.name+"|"+f.size;if(R.some(r=>(r.files||[]).includes(sig))){add(esc(f.name)+": 이미 등록된 파일입니다.");continue}
+try{const{doc,P}=await readPdf(f),res=parsePdf(P,RL);PD.set(f.name,doc);const a=attach(res,f);
+add(`<b>${esc(f.name)}</b> — ${res.kind==="user"?"사용자":"전문가"} 테스트 · ${esc(res.svc)} ${esc(res.plat)}(v${esc(res.ver)}) · ${a.isNew?"새 조사 건 생성":"기존 조사 건에 연결"}<br>추출 ${Object.keys(res.vals).length}개 항목 · 새로 채움 ${a.ap.length} · 기존값과 다름 ${a.df.length}${res.warn.concat(res.notes).map(x=>"<br>• "+esc(x)).join("")}${Object.values(res.vals).some(o=>o.calc)&&!RL.ok?"<br>• 성공률은 계산 규칙 미확정이라 참고값으로만 보관했습니다(검수 화면에서 확인).":""}`)}
+catch(e){add(esc(f.name)+": 추출 실패 — "+esc(e.message||e)+" 파일을 다시 선택해 재시도할 수 있습니다.","note iss")}}
+box.insertAdjacentHTML("beforeend",'<a href="#rev">검수 관리로 이동</a>')};
+views.pdf=()=>`<h2>PDF 업로드</h2><div class="note">전문가/사용자 평가 보고서(텍스트형 PDF)를 올리면 브라우저에서 표지·점수표·과업별 결과를 읽어 같은 서비스·플랫폼 조사 건에 연결합니다. 스캔 PDF(OCR)는 서버가 필요해 아직 처리하지 못합니다. 법인·조사 회차·이슈 수(Jira)는 PDF에 없어 비워 두고, 이미 있는 값과 다르면 덮어쓰지 않고 비교만 표시합니다.</div>
+<div class="panel"><h3>성공률 계산 규칙 (확정 필요)</h3><div class="hint">엑셀 샘플에서 역산한 규칙: 성공률 = (성공 + 미흡×가중치) ÷ 전체 과업, 평균 = 3개 장애 유형 단순평균. PDF에는 성공률이 기재되지 않아, 확정하기 전에는 참고 계산값으로만 보관합니다.</div>
+<div class="tools" style="margin-top:8px">미흡 가중치 <input id="rw" type="number" step="0.1" min="0" max="1" value="${RL.w}" style="width:70px"><label><input type="checkbox" id="rok" ${RL.ok?"checked":""}> 이 규칙을 확정하고 PDF 성공률 칸에 반영</label></div></div>
+<div class="drop" id="dz">PDF 파일을 끌어다 놓거나 선택하세요 (최대 20MB, 여러 개 가능)<br><br><input type="file" id="pf" accept="application/pdf,.pdf" multiple></div><div id="pmsg"></div>`;
+const _edit=edit;
+edit=function(id){_edit(id);const r=R.find(x=>x.id===id);if(!r||!r.ext)return;const E=Object.entries(r.ext);
+$("#md .mb").insertAdjacentHTML("beforeend",`<div class="panel" style="margin-top:10px"><h3>PDF 추출값 비교 (자동 덮어쓰기 없음)</h3><div class="tw"><table><tr><th>항목</th><th>현재값</th><th>PDF 값</th><th>원본 위치</th><th></th></tr>${E.map(([k,o])=>`<tr><td>${LB[k]}</td><td>${esc(r[k])}</td><td>${o.v}${o.calc?" <span class='hint'>(참고 계산)</span>":""}</td><td><button data-pg="${esc(o.f)}|${o.p}">${esc(o.f.slice(-22))} p.${o.p}</button></td><td><button data-ap="${k}">입력칸에 적용</button></td></tr>`).join("")}</table></div><div id="pv2" class="hint" style="margin-top:8px">'p.' 버튼을 누르면 원본 페이지를 봅니다(이번 세션에 업로드한 파일만).</div></div>`);
+document.querySelectorAll("[data-ap]").forEach(b=>b.onclick=()=>{const i=document.querySelector(`[data-k="${b.dataset.ap}"]`);i.value=r.ext[b.dataset.ap].v;i.style.background="#dcf3e6"});
+document.querySelectorAll("[data-pg]").forEach(b=>b.onclick=async()=>{const[f,p]=b.dataset.pg.split("|"),d=PD.get(f),v=$("#pv2");if(!d){v.textContent="이 파일은 현재 세션에 없습니다. PDF 업로드 화면에서 다시 올리면 페이지를 볼 수 있습니다.";return}
+const pg=await d.getPage(+p),vp=pg.getViewport({scale:1.2}),c=document.createElement("canvas");c.width=vp.width;c.height=vp.height;c.style.maxWidth="100%";await pg.render({canvasContext:c.getContext("2d"),viewport:vp}).promise;v.innerHTML="";v.appendChild(c)})};
+const DS={round:null,conf:false};
+{const st=document.createElement("style");st.textContent=`.sheet{display:grid;grid-template-columns:repeat(auto-fit,minmax(560px,1fr));gap:16px;align-items:start;margin-bottom:8px}@media(min-width:1500px){.sheet .s1{grid-row:span 3}}.sheet h3{margin:0 0 4px;font-size:13px}.sh{border-collapse:collapse;font-size:12px;background:#fff;width:100%}.sh th,.sh td{border:1px solid #cfd6e2;padding:4px 7px;text-align:center;white-space:nowrap;position:static;cursor:default}.sh th{background:#fde047;font-weight:700;color:#1c2a3e}.sh td.l{text-align:left}.sh td.b{font-weight:700}.sh tr.g td{border-top:2px solid #1c2a3e}.sh tr.tot td{background:#fde8d8;font-weight:700}.sh .un{color:var(--warn)}`;document.head.appendChild(st)}
+document.addEventListener("change",e=>{if(e.target.id==="dr"){DS.round=e.target.value;render()}if(e.target.id==="dm"){DS.conf=e.target.value==="1";render()}});
+const MK=["e_a","e_b","e_c","e_d","e_total","bl_r","lo_r","up_r","u_avg"],f1=v=>v==null?"-":(+v).toFixed(1);
+const mean=(a,k)=>{const v=a.map(r=>num(r[k])).filter(x=>x!=null);return v.length?v.reduce((x,y)=>x+y,0)/v.length:null};
+const ord=(a,k)=>[...new Set(a.map(r=>r[k]).filter(Boolean))];
+const SUB='<th>인식의<br>용이성</th><th>운용의<br>용이성</th><th>이해의<br>용이성</th><th>견고성</th><th>합계<br>(100)</th><th>시각장애<br>(전맹)</th><th>시각장애<br>(저시력)</th><th>지체장애<br>(상지)</th><th>평균</th>';
+const GR='<th colspan="5">전문가테스트 (화면 단위)</th><th colspan="4">사용자테스트 (TASK단위)</th>';
+const HD=f=>`<tr><th rowspan="2">${f}</th>${GR}</tr><tr>${SUB}</tr>`;
+const bc=k=>k==="e_total"||k==="u_avg"?"b":"";
+const mrow=(lab,a,cls)=>`<tr class="${cls||""}"><td class="l">${esc(lab)}</td>${MK.map(k=>`<td class="${bc(k)}">${f1(mean(a,k))}</td>`).join("")}</tr>`;
+const _dash=views.dash;
+views.dash=function(){
+ const rs=ord(R.filter(r=>S.smp||!r.sample),"round").sort(),real=ord(R.filter(r=>!r.sample),"round").sort();
+ if(DS.round==null||(DS.round&&!rs.includes(DS.round)))DS.round=real.length?real[real.length-1]:(rs.length?rs[rs.length-1]:"");
+ const base=R.filter(r=>(S.smp||!r.sample)&&(!DS.conf||r.status==="검수 완료")),A=base.filter(r=>!DS.round||r.round===DS.round).sort((x,y)=>x.id-y.id);
+ let pc="",ps="",n=0;
+ const s1=A.map(r=>{const nc=r.corp!==pc,ns=nc||r.svc!==ps;pc=r.corp;ps=r.svc;n++;const ok=r.status==="검수 완료";return`<tr class="${ns?"g":""}"><td>${n}</td><td class="l">${nc?esc(r.corp):""}</td><td class="l">${ns?esc(r.svc):""}</td><td class="l">${esc(r.plat)}</td>${MK.map(k=>`<td class="${bc(k)}">${f1(num(r[k]))}</td>`).join("")}<td class="${ok?"":"un"}">${ok?"✓":esc(r.status)}</td></tr>`}).join("");
+ const tot=A.length?`<tr class="tot"><td colspan="4" class="l">전체 평균</td>${MK.map(k=>`<td>${f1(mean(A,k))}</td>`).join("")}<td></td></tr>`:"";
+ const sv=[...new Map(A.map(r=>[r.corp+"|"+r.svc,r.svc])).entries()],cp=ord(A,"corp");
+ const s2=sv.map(([k,l])=>mrow(l,A.filter(r=>r.corp+"|"+r.svc===k))).join("");
+ const s3=cp.map(c=>mrow(c,A.filter(r=>r.corp===c))).join("")+(A.length?mrow("그룹사 평균",A,"tot"):"");
+ const PO=["iOS","Android","Windows","Mac","Web"],pl=[...PO.filter(p=>A.some(r=>r.plat===p)),...ord(A,"plat").filter(p=>!PO.includes(p))];
+ const s4=`<tr><th></th>${pl.map(p=>`<th>${esc(p)}</th>`).join("")}</tr>`+cp.map(c=>`<tr><td class="l">${esc(c)}</td>${pl.map(p=>`<td>${f1(mean(A.filter(r=>r.corp===c&&r.plat===p),"u_avg"))}</td>`).join("")}</tr>`).join("");
+ const pr=DS.round?DS.round.replace(/\d{4}/,y=>+y-1):"",B=pr?base.filter(r=>r.round===pr):[],cell=a=>`<td>${f1(mean(a,"bl_r"))}</td><td>${f1(mean(a,"u_avg"))}</td>`;
+ const s5=B.length?`<div class="tw"><table class="sh"><tr><th rowspan="2"></th><th colspan="2">${esc(DS.round)} 사용자</th><th colspan="2">${esc(pr)} 사용자</th></tr><tr><th>전맹</th><th>평균</th><th>전맹</th><th>평균</th></tr>${cp.map(c=>`<tr><td class="l">${esc(c)}</td>${cell(A.filter(r=>r.corp===c))}${cell(B.filter(r=>r.corp===c))}</tr>`).join("")}<tr class="tot"><td class="l">평균</td>${cell(A)}${cell(B)}</tr></table></div>`:`<div class="note">전년 동기(${esc(pr||"회차 미선택")}) 데이터가 없습니다. 해당 회차로 가져온 데이터가 있으면 자동으로 비교합니다.</div>`;
+ const un=A.filter(r=>r.status!=="검수 완료").length;
+ const ctl=`<div class="tools"><label>조사 회차 <select id="dr"><option value="">전체</option>${rs.map(x=>`<option ${x===DS.round?"selected":""}>${esc(x)}</option>`).join("")}</select></label><label>집계 대상 <select id="dm"><option value="0" ${DS.conf?"":"selected"}>전체 (미검수 포함)</option><option value="1" ${DS.conf?"selected":""}>검수 완료만</option></select></label><span class="hint">${A.length}건 중 미검수 ${un}건 포함 · 서비스·법인·그룹사 값은 하위 행 기재값의 단순평균(엑셀 요약과 같은 방식)</span></div>`;
+ const T=(h,b)=>`<div class="tw"><table class="sh">${h}${b}</table></div>`;
+ return`<h2>종합 현황</h2>${ctl}<div class="sheet"><div class="s1"><h3>1. 서비스 / 플랫폼 단위</h3>${T(`<tr><th rowspan="2">번호</th><th rowspan="2">법인</th><th rowspan="2">서비스명</th><th rowspan="2">플랫폼</th>${GR}<th rowspan="2">검수</th></tr><tr>${SUB}</tr>`,s1+tot)}</div><div><h3>2. 서비스 단위</h3>${T(HD("서비스"),s2)}</div><div><h3>3. 법인 단위</h3>${T(HD("법인"),s3)}</div><div><h3>4. 플랫폼 단위 사용자테스트 평균</h3>${T("",s4)}</div><div><h3>5. 전년 동기 (사용자테스트)</h3>${s5}</div></div>`+_dash().replace("<h2>대시보드</h2>",'<h2 style="margin-top:22px">요약 카드 · 차트 (검수 완료 데이터)</h2>')};
+load();render();
+</script></body></html>
