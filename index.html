@@ -51,7 +51,7 @@ th{background:#f0f4fa;cursor:pointer;position:sticky;top:0}tr.r:hover{background
 @media(max-width:760px){body{flex-direction:column}nav{width:auto;display:flex;flex-wrap:wrap;padding:6px}nav h1{display:none}}
 </style></head><body>
 <nav><h1>접근성 실태조사<br>취합 대시보드</h1>
-<a data-v="dash">대시보드</a><a data-v="list">조사 결과</a><a data-v="pdf">PDF 업로드</a><a data-v="imp">데이터 가져오기</a><a data-v="rev">검수 관리</a><a data-v="rep">보고서</a><div id="who" style="padding:14px 16px;font-size:11px;color:#9fb6da;word-break:break-all"></div></nav>
+<a data-v="dash">대시보드</a><a data-v="list">조사 결과</a><a data-v="pdf">PDF 업로드</a><a data-v="imp">데이터 가져오기</a><a data-v="rev">검수 관리</a><a data-v="qa">PDF 품질 검수</a><a data-v="qh">검수 이력</a><a data-v="rep">보고서</a><div id="who" style="padding:14px 16px;font-size:11px;color:#9fb6da;word-break:break-all"></div></nav>
 <div id="bn" style="position:fixed;right:12px;bottom:10px;font-size:12px;background:#fff;border:1px solid #dde3ec;border-radius:6px;padding:4px 10px;z-index:9">연결 확인 중…</div><main id="m"></main><div id="md"></div>
 <script>
 const G=[["corp","법인","t"],["svc","서비스명","t"],["plat","플랫폼","t"],["round","조사 회차","t"],["date","업데이트 일자","t"],
@@ -287,5 +287,370 @@ load=async function(){if(!DB){showLogin("Supabase 설정이 필요합니다. ind
  R=data.map(x=>Object.assign(x.data,{id:+x.id}));SN=new Map(R.map(r=>[r.id,JSON.stringify(r)]));window.LOCK=false;setBn(em+" · "+R.length+"건");render()};
 if(DB)DB.auth.onAuthStateChange(ev=>{if(ev==="SIGNED_OUT"||(ev==="SIGNED_IN"&&!USER))setTimeout(load,0)});
 addEventListener("focus",()=>{if(DB&&!$("#md").innerHTML&&!IM)load()});
+window.QA_RESULTS={"tests": [{"id": "T01", "rule": "A", "desc": "같은 이슈 페이지(62쪽)를 한 번 더 삽입한 PDF", "real": true, "pass": true, "hit": "오류 의심 · 동일 페이지·항목 중복 이슈 의심 (p.63)", "extra": 37}, {"id": "T02", "rule": "B", "desc": "10쪽을 완전한 빈 페이지로 교체한 PDF", "real": true, "pass": true, "hit": "오류 의심 · 공백 페이지 (p.10)", "extra": 1}, {"id": "T03", "rule": "C", "desc": "과업 2 페이지의 첫 아이콘을 가린 PDF(사용자 iOS 9쪽)", "real": true, "pass": true, "hit": "분석 불가 · 수행 결과 아이콘 인식 불가 (p.9)", "extra": 0}, {"id": "T04", "rule": "D", "desc": "과업 2 페이지 전맹 문구는 미흡인데 아이콘을 성공 아이콘으로 바꾼 PDF", "real": true, "pass": true, "hit": "확정 오류 · 결과 문구와 아이콘 불일치 (p.9)", "extra": 0}, {"id": "T05", "rule": "E", "desc": "전문가 iOS 표지의 iOS를 Android로 변경", "real": false, "pass": true, "hit": "확정 오류 · 표지-본문 플랫폼 불일치 (p.1)", "extra": 1}, {"id": "T06", "rule": "E", "desc": "사용자 Android 표지의 Android를 iOS로 변경", "real": false, "pass": true, "hit": "확정 오류 · 표지-본문 플랫폼 불일치 (p.1)", "extra": 1}, {"id": "T07", "rule": "E", "desc": "표지 서비스명을 카카오맵으로 변경", "real": false, "pass": true, "hit": "확정 오류 · 표지-본문 서비스명 불일치 (p.2)", "extra": 0}, {"id": "T08", "rule": "E", "desc": "표지를 사용자 평가로 변경(본문은 전문가)", "real": false, "pass": true, "hit": "오류 의심 · 표지 보고서 유형-본문 구조 불일치 (p.1)", "extra": 7}, {"id": "T09", "rule": "E", "desc": "Android 보고서를 iOS가 들어간 파일명으로 업로드", "real": false, "pass": true, "hit": "오류 의심 · 파일명-표지 플랫폼 불일치 (p.1)", "extra": 0}, {"id": "T10", "rule": "F", "desc": "결과 페이지 제목을 다른 페이지명으로 변경(1p 홈→랭킹 맛집)", "real": false, "pass": true, "hit": "오류 의심 · 페이지 정보 불일치(목록↔결과 페이지) (p.5)", "extra": 0}, {"id": "T11", "rule": "F", "desc": "오류 항목 번호와 항목명 불일치(7.초점→7.명도 대비)", "real": false, "pass": true, "hit": "확정 오류 · 이슈 번호와 항목명 불일치 (p.9)", "extra": 0}, {"id": "T12", "rule": "G", "desc": "결과 페이지(2p)의 평가 경로를 다른 경로로 변경", "real": false, "pass": true, "hit": "오류 의심 · 평가 경로 불일치(오류 항목↔결과 페이지) (p.15)", "extra": 1}, {"id": "T13", "rule": "G", "desc": "결과 페이지(2p)의 평가 경로 값을 비움", "real": false, "pass": true, "hit": "확정 오류 · 평가 경로 누락 (p.14)", "extra": 9}, {"id": "T14", "rule": "G", "desc": "사용자 과업 페이지의 평가 경로 줄 삭제", "real": false, "pass": true, "hit": "확정 오류 · 평가 경로 누락 (p.14)", "extra": 0}, {"id": "T15", "rule": "H", "desc": "결과 표에서 X 기호 삭제(1p 항목 1, 오류 항목 상세는 존재)", "real": false, "pass": true, "hit": "오류 의심 · X 표시 누락 의심(결과 칸이 비어 있음) (p.5)", "extra": 1}, {"id": "T16", "rule": "H", "desc": "결과 표의 X를 O로 변경(1p 항목 3, 오류 항목 상세는 존재)", "real": false, "pass": true, "hit": "오류 의심 · X 표시 누락 의심 (p.5)", "extra": 1}, {"id": "T17", "rule": "I", "desc": "사용자 요약 비율을 73/20/7에서 80/13/7로 변경", "real": false, "pass": true, "hit": "확정 오류 · 요약 비율과 과업별 집계 불일치 (p.3)", "extra": 0}, {"id": "T18", "rule": "I", "desc": "검사 항목별 표의 준수 페이지 수 변경(8→9)", "real": false, "pass": true, "hit": "오류 의심 · 검사 항목별 표 집계 불일치 (p.4)", "extra": 0}, {"id": "T19", "rule": "J", "desc": "10·11쪽 순서를 바꾼 PDF", "real": true, "pass": true, "hit": "오류 의심 · 인쇄-실제 페이지 번호 불일치 (p.10)", "extra": 1}, {"id": "T20", "rule": "J", "desc": "5쪽(1p 결과)을 삭제한 PDF", "real": true, "pass": true, "hit": "오류 의심 · 결과 페이지 번호 순서 이상 (p.13)", "extra": 100}, {"id": "T21", "rule": "E", "desc": "Android 보고서 이슈 설명에 VoiceOver 삽입", "real": false, "pass": true, "hit": "오류 의심 · 이슈 설명에 다른 플랫폼 용어 (p.48)", "extra": 0}, {"id": "T22", "rule": "F", "desc": "20쪽 하단 인쇄 페이지 번호 삭제", "real": false, "pass": true, "hit": "확인 필요 · 인쇄 페이지 번호 누락 (p.20)", "extra": 0}, {"id": "T23", "rule": "H", "desc": "사용자 결과 문구를 성공으로 바꿨는데 이슈 상세는 남아 있음(과업 1 전맹)", "real": false, "pass": true, "hit": "오류 의심 · 성공인데 이슈 기재(설명-결과 모순) (p.7)", "extra": 3}, {"id": "T24", "rule": "I", "desc": "사용자 요약표의 과업 1 전맹 결과를 실패→성공으로 변경", "real": false, "pass": true, "hit": "확정 오류 · 요약표와 과업 페이지 결과 불일치 (p.3)", "extra": 0}], "cross": [["X1", "정상 3개 파일 교차 검수(오탐 확인)", true, "탐지 없음"], ["X2", "같은 보고서를 2회 업로드", true, "같은 서비스·유형·플랫폼 보고서 중복, 플랫폼 간 이슈 내용 동일(복사 의심), 서비스 보고서 간 플랫폼 동일"], ["X3", "Android 보고서 표지를 iOS로 변경 후 iOS 보고서와 교차 검수", true, "같은 서비스·유형·플랫폼 보고서 중복, 서비스 보고서 간 플랫폼 동일"]]};
+const QA=(()=>{
+const NS=s=>String(s||"").replace(/\s+/g,"");
+const MKN=s=>/^[ＸXx✕×]$/.test(s)?"X":/^[ＯOo○◯]$/.test(s)?"O":/^[-－–—]$/.test(s)?"-":null;
+const ITEMS=["대체 텍스트","자막, 수화 등의 제공","색에 무관한 콘텐츠 인식","명도 대비","명확한 지시사항","알림 기능","초점","누르기 동작 지원","응답 시간 조절","정지 기능 제공","컨트롤의 크기와 간격","입력도움","사용자 인터페이스의 일관성","깜빡거림의 사용 제한","자동재생 금지","예측가능성","폰트 관련 기능의 활용","보조기술과의 호환성"];
+const KW=[/대체\s*텍스트|부가\s*정보|alt/i,/자막|수화/,/색상|색에|색\s*만/,/명도\s*대비|대비/,/지시\s*사항|명확한/,/알림/,/초점|포커스/,/누르기\s*동작|제스처|길게\s*누르/,/응답\s*시간|시간\s*제한/,/정지\s*기능|일시\s*정지|자동\s*전환/,/컨트롤.*크기|크기.*간격|터치\s*영역|최소\s*크기/,/입력\s*도움|레이블|입력\s*서식|오류\s*(정정|수정)/,/일관/,/깜빡|점멸/,/자동\s*재생/,/예측|문맥\s*변화/,/폰트|글자\s*크기|텍스트\s*크기/,/상태정보|역할정보|보조기술/];
+const DEF={items:ITEMS,legend:{X:"미준수",O:"준수","-":"해당 없음"},blankInk:0.003,dupSim:0.9,
+ req:{expert:[["평가 개요",/평가 개요/],["전문가 평가 페이지 목록",/전문가 평가 페이지/],["평가점수 산정 방법",/점수 산정 방법/],["전체 결과",/전체 결과/],["검사 항목별 상세 결과",/검사 항목별 상세 결과/],["페이지별 결과",/^\d+p\s*'.+'\s*결과/m],["오류 항목 상세",/^오류 항목\s*\d+/m]],
+      user:[["수행 정보",/수행 정보/],["수행 결과",/수행 결과/],["주요 화면",/주요 화면/],["결과 분석",/결과 분석/],["과업 정보",/과업 정보/],["과업별 결과",/^과업\s*\d+\s*[:：]/m]]}};
+const grams=s=>{s=NS(s).toLowerCase();const g=new Set();for(let i=0;i<s.length-2;i++)g.add(s.slice(i,i+3));return g};
+const sim=(a,b)=>{const A=grams(a),B=grams(b);if(!A.size||!B.size)return 0;let n=0;A.forEach(x=>{if(B.has(x))n++});return n/(A.size+B.size-n)};
+const PLAT_I=/iPhone|아이폰|VoiceOver|보이스오버|iPadOS/,PLAT_A=/Galaxy|갤럭시|TalkBack|Talkback|톡백|삼성/;
+function analyze(P,ctx={}){
+ const T=Object.assign({},DEF,ctx.tpl||{}),F=[],M={pages:P.length,file:ctx.file||"",pageTypes:[],issues:[],list:[]};
+ const PN=P.map(p=>{const l=p.lines[p.lines.length-1];const m=l&&/^[-–]\s*(\d+)\s*[-–]$/.exec(l.t.trim());return m?+m[1]:null});
+ const isPN=t=>/^[-–]\s*\d+\s*[-–]$/.test(t.trim());
+ const add=o=>F.push(Object.assign({rule:"",type:"",sev:"보통",cls:"오류 의심",page:null,ref:"",msg:"",basis:"",conf:"보통",box:null,rel:""},o,{printed:o.page?PN[o.page-1]:null}));
+ const bx=(pg,l)=>l?{p:pg,x:l.x0,y:l.y,w:l.x1-l.x0,h:Math.max(l.h,8)}:null;
+ const FL=(pg,rx)=>P[pg-1].lines.find(l=>rx.test(l.t));
+ const txt=P.map(p=>p.text).join("\n");
+ // ---- 표지/메타 (E)
+ const c1=NS(P[0]?P[0].text:""),c1s=(P[0]?P[0].text:"").replace(/\s+/g," ");
+ M.kind=/사용자\s*평가/.test(c1s)?"user":/전문가\s*평가/.test(c1s)?"expert":"";
+ const sv=/([가-힣A-Za-z0-9]+)\(v?([\d.]+)\)/.exec(c1s);M.svc=sv?sv[1]:"";M.ver=sv?sv[2]:"";
+ const pl=/평가\s*(iOS|Android|Windows|Mac|Web)/i.exec(c1s);M.plat=pl?pl[1].replace(/^ios$/i,"iOS").replace(/^android$/i,"Android"):"";
+ const dd=/(\d{4})\.\s*(\d{1,2})\.\s*(\d{1,2})/.exec(c1s);M.date=dd?`${dd[1]}-${dd[2].padStart(2,"0")}-${dd[3].padStart(2,"0")}`:"";
+ if(!M.kind){const nu=P.filter(p=>/^과업\s*\d+\s*[:：]/m.test(p.text)).length,ne=P.filter(p=>/^오류 항목/m.test(p.text)).length;M.kind=nu>ne?"user":ne?"expert":""}
+ const KO=M.kind==="user"?"사용자":M.kind==="expert"?"전문가":"";
+ if(!P[0]||!M.kind||!M.svc||!M.plat)add({rule:"E",type:"표지 정보 인식 불가",sev:"확인 필요",cls:"분석 불가",page:1,msg:`표지에서 ${[!M.kind&&"보고서 유형",!M.svc&&"서비스명",!M.plat&&"플랫폼"].filter(Boolean).join(", ")}을(를) 읽지 못했습니다.`,basis:"표지 텍스트 패턴 불일치(스캔 PDF·다른 양식 가능)",conf:"산정 불가"});
+ // 본문 플랫폼 근거
+ const bodyI=[],bodyA=[];P.forEach((p,i)=>{if(i===0)return;p.lines.forEach(l=>{if(PLAT_I.test(l.t)||/\biOS\b/.test(l.t))bodyI.push([i+1,l]);if(PLAT_A.test(l.t)||/Android/.test(l.t))bodyA.push([i+1,l])})});
+ const ev=a=>a.slice(0,3).map(([pg,l])=>`p.${pg} "${l.t.slice(0,40)}"`).join(", ");
+ if(M.plat==="iOS"&&bodyA.length&&!bodyI.length||M.plat==="Android"&&bodyI.length&&!bodyA.length){const o=M.plat==="iOS"?bodyA:bodyI;add({rule:"E",type:"표지-본문 플랫폼 불일치",sev:"높음",cls:"확정 오류",page:1,msg:`표지는 ${M.plat}인데 본문 근거는 ${M.plat==="iOS"?"Android":"iOS"}입니다.`,basis:`본문 ${o.length}곳: ${ev(o)}`,conf:"높음",box:bx(1,FL(1,/iOS|Android/i)),rel:o.map(x=>x[0]).join(",")})}
+ else if(bodyI.length&&bodyA.length)add({rule:"E",type:"본문에 두 플랫폼 용어 혼재",sev:"보통",cls:"확인 필요",page:bodyI[0][0],msg:"본문에 iOS와 Android 용어가 함께 있습니다(비교 설명일 수 있음).",basis:`iOS: ${ev(bodyI)} / Android: ${ev(bodyA)}`,conf:"낮음",box:bx(bodyI[0][0],bodyI[0][1])});
+ else if(M.plat&&!bodyI.length&&!bodyA.length)add({rule:"E",type:"본문 플랫폼 근거 없음",sev:"확인 필요",cls:"확인 필요",page:1,msg:"본문에서 플랫폼을 확인할 근거(운영체제·기기명 등)를 찾지 못했습니다.",basis:"표지의 플랫폼만 확인됨",conf:"산정 불가"});
+ // 파일명
+ const fn=ctx.file||"";const fp=/ios/i.test(fn)&&!/android/i.test(fn)?"iOS":/android/i.test(fn)&&!/ios/i.test(fn)?"Android":"",fk=/사용자/.test(fn)&&!/전문가/.test(fn)?"user":/전문가/.test(fn)&&!/사용자/.test(fn)?"expert":"";
+ if(fp&&M.plat&&fp!==M.plat)add({rule:"E",type:"파일명-표지 플랫폼 불일치",sev:"높음",cls:"오류 의심",page:1,msg:`파일명은 ${fp}, 표지는 ${M.plat}입니다.`,basis:`파일명 "${fn}" / 표지 "${M.plat}" (파일명은 참고 정보이므로 표지·본문 일치 여부와 함께 판단)`,conf:"보통",box:bx(1,FL(1,/iOS|Android/i))});
+ if(fk&&M.kind&&fk!==M.kind)add({rule:"E",type:"파일명-표지 보고서 유형 불일치",sev:"높음",cls:"오류 의심",page:1,msg:`파일명은 ${fk==="user"?"사용자":"전문가"}, 표지는 ${KO} 평가입니다.`,basis:`파일명 "${fn}"`,conf:"보통",box:bx(1,FL(1,/평가/))});
+ // 유형 vs 구조
+ const nU=P.filter(p=>/^과업\s*\d+\s*[:：]/m.test(p.text)).length,nE=P.filter(p=>/^오류 항목/m.test(p.text)||/^\d+p\s*'.+'\s*결과/m.test(p.text)).length;
+ if(M.kind==="expert"&&nU>nE||M.kind==="user"&&nE>nU)add({rule:"E",type:"표지 보고서 유형-본문 구조 불일치",sev:"높음",cls:"오류 의심",page:1,msg:`표지는 ${KO} 평가인데 본문 구조는 ${M.kind==="expert"?"사용자":"전문가"} 테스트 형식입니다.`,basis:`과업 페이지 ${nU}개 / 전문가 결과·오류 항목 페이지 ${nE}개`,conf:"보통"});
+ const bm=/평가 방법\s*:\s*(전문가|사용자)/.exec(txt);if(bm&&KO&&bm[1]!==KO){const l=FL(P.findIndex(p=>/평가 방법/.test(p.text))+1,/평가 방법/);add({rule:"E",type:"평가 유형 불일치",sev:"높음",cls:"확정 오류",page:P.findIndex(p=>/평가 방법/.test(p.text))+1,msg:`표지 ${KO} 평가 ↔ 본문 평가 방법 ${bm[1]} 평가`,basis:"표지와 평가 개요의 평가 유형이 다름",conf:"높음",box:bx(P.findIndex(p=>/평가 방법/.test(p.text))+1,l)})}
+ // 서비스명·버전
+ P.forEach((p,i)=>{if(i===0)return;p.lines.forEach(l=>{const m=/([가-힣A-Za-z0-9]+)\(v([\d.]+)\)/.exec(l.t);if(m&&M.svc&&(m[1]!==M.svc||m[2]!==M.ver))add({rule:"E",type:m[1]!==M.svc?"표지-본문 서비스명 불일치":"표지-본문 버전 불일치",sev:"높음",cls:m[1]!==M.svc?"확정 오류":"오류 의심",page:i+1,msg:`표지 ${M.svc}(v${M.ver}) ↔ 본문 ${m[1]}(v${m[2]})`,basis:`p.${i+1} "${l.t.slice(0,50)}"`,conf:"높음",box:bx(i+1,l)})})});
+ const dup=new Set();(ctx.services||[]).filter(s=>s&&NS(s).length>=3&&s!==M.svc&&!(M.svc||"").includes(s)&&!s.includes(M.svc||"~~")).forEach(s=>{P.forEach((p,i)=>{if(i===0)return;const l=p.lines.find(l=>NS(l.t).includes(NS(s)));if(l&&!dup.has(s)){dup.add(s);add({rule:"E",type:"다른 서비스명 포함 의심",sev:"보통",cls:"확인 필요",page:i+1,msg:`다른 서비스명 "${s}"이(가) 본문에 있습니다.`,basis:`p.${i+1} "${l.t.slice(0,50)}" — 비교·언급 목적일 수 있어 확인 필요`,conf:"낮음",box:bx(i+1,l)})}})});
+ // 날짜
+ const per=/(?:평가|수행) 기간\s*:?\s*(\d{4})\.\s*(\d+)\.\s*(\d+)(?:\s*~\s*(\d{4})\.\s*(\d+)\.\s*(\d+))?/.exec(txt);
+ if(per&&M.date){const f=(y,m,d)=>`${y}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`,a=f(per[1],per[2],per[3]),b=per[4]?f(per[4],per[5],per[6]):a;if(M.date<a||M.date>b)add({rule:"E",type:"표지 날짜와 조사 기간 불일치",sev:"낮음",cls:"확인 필요",page:1,msg:`표지 날짜 ${M.date}가 기간 ${a}~${b} 밖입니다.`,basis:"작성일이 조사 종료 후일 수 있어 확인 필요",conf:"낮음"})}
+ // ---- 페이지 번호 (F)
+ let prev=null;const seen={};
+ P.forEach((p,i)=>{if(i===0)return;const n=PN[i];
+  if(n==null){add({rule:"F",type:"인쇄 페이지 번호 누락",sev:"낮음",cls:"확인 필요",page:i+1,msg:"하단 인쇄 페이지 번호를 찾지 못했습니다.",basis:"구분 페이지·양식 생략일 수 있어 오류로 확정하지 않음",conf:"낮음"});return}
+  if(n!==i+1)add({rule:"F",type:"인쇄-실제 페이지 번호 불일치",sev:"낮음",cls:"오류 의심",page:i+1,msg:`PDF ${i+1}쪽의 인쇄 번호가 ${n}입니다.`,basis:`이전 인쇄 번호 ${prev??"-"}`,conf:"높음",box:bx(i+1,p.lines[p.lines.length-1])});
+  if(seen[n])add({rule:"F",type:"인쇄 페이지 번호 중복",sev:"낮음",cls:"오류 의심",page:i+1,msg:`인쇄 번호 ${n}이(가) p.${seen[n]}에도 있습니다.`,basis:"같은 번호 반복",conf:"높음",box:bx(i+1,p.lines[p.lines.length-1])});seen[n]=i+1;prev=n});
+ // ---- 구조 분류
+ const SO={};const listing=[];let pathX=null;
+ const ei=P.findIndex(p=>/전문가 평가 페이지/.test(p.text)&&/페이지 경로/.test(p.text));
+ if(M.kind==="expert"&&ei>=0){for(let i=ei;i<P.length&&!/점수 산정 방법/.test(P[i].text);i++)P[i].lines.forEach(l=>{if(isPN(l.t))return;const w=l.w;const m=/^(\d+)$/.exec(w[0]&&w[0].t||"");
+   if(m&&+m[1]===listing.length+1&&w.length>=2){let cut=w.length;for(let j=2;j<w.length;j++)if(w[j].x0-w[j-1].x1>20){cut=j;break}const nm=w.slice(1,cut).map(x=>x.t).join(" "),pa=w.slice(cut).map(x=>x.t).join(" ");listing.push({n:+m[1],name:nm,path:pa,page:i+1,line:l,y:l.y,pg:i})}
+   else if(listing.length&&!/^No\b/.test(w[0]&&w[0].t||"")&&!/^\d+$/.test(w[0]&&w[0].t||"")&&/[가-힣>]/.test(l.t)){const L=listing[listing.length-1];if(L.pg===i&&l.y-L.y<24&&l.y>L.y&&l.x0>150){L.path=(L.path+" "+l.t).trim();L.y=l.y}}})}
+ M.list=listing;
+ // 결과 페이지(전문가)
+ const res={},iss=[];
+ P.forEach((p,i)=>{const pg=i+1;const h=p.lines.map(l=>[l,/^(\d+)p\s*'(.+)'\s*결과$/.exec(l.t.trim())]).find(x=>x[1]);
+  if(M.kind==="expert"&&h){const N=+h[1][1],r={pg,n:N,name:h[1][2],hline:h[0],path:"",pline:null,marks:{},rows:{},info:[]};
+   p.lines.forEach(l=>{const m=/^◎\s*평가 경로\s*:?\s*(.*)$/.exec(l.t);if(m){r.path=m[1].trim();r.pline=l;r.hasPath=true}
+    const w=l.w;if(w.length>=3&&/^\d+$/.test(w[0].t)){const k=+w[0].t,mk=MKN(w[w.length-1].t);if(k>=1&&k<=18&&mk&&w.length>=3&&!r.rows[k]){r.marks[k]=mk;r.rows[k]=l;r.names=r.names||{};r.names[k]=w.slice(1,-1).map(x=>x.t).join(" ")}
+     else if(k>=1&&k<=18&&!mk&&w.length>=2&&/[가-힣]/.test(w[1].t)&&!/있음|없음/.test(l.t)&&!r.rows[k]&&r.hasPath&&l.x0<140){r.marks[k]=null;r.rows[k]=l;r.names=r.names||{};r.names[k]=w.slice(1).map(x=>x.t).join(" ")}}
+    if(/있음$|없음$/.test(l.t.trim())&&/^\d+\s/.test(l.t))r.info.push(l)});
+   res[N]=r;(res.order=res.order||[]).push(N)}
+  const hd=/^오류 항목\s*(\d+)\s*\.\s*(.+)$/.exec((p.lines[0]||{}).t||"")||p.lines.map(l=>/^오류 항목\s*(\d+)\s*\.\s*(.+)$/.exec(l.t)).find(Boolean);
+  if(M.kind==="expert"&&hd){const o={pg,item:+hd[1],iname:hd[2].trim(),hline:p.lines.find(l=>/^오류 항목/.test(l.t)),issues:[]};
+   const pm=p.lines.map(l=>[l,/^•\s*페이지\s*:\s*(\d+)p\s*'(.*?)'\s*\((.*)\)\s*$/.exec(l.t.trim())]).find(x=>x[1]);if(pm){o.pn=+pm[1][1];o.pname=pm[1][2];o.ppath=pm[1][3];o.pline=pm[0]}
+   let cur=null,want=1;p.lines.forEach(l=>{const m=/^(\d+)\s+(\S.*)$/.exec(l.t.trim());if(m&&!/^[-*]/.test(l.t)&&l.x0<120&&!/^\[/.test(m[2])&&+m[1]>=1&&+m[1]<=9){cur={no:+m[1],title:m[2],desc:[],line:l,pg};if(+m[1]!==want)o.badSeq=(o.badSeq||[]).concat([[want,+m[1],l]]);want=+m[1]+1;o.issues.push(cur)}
+    else if(cur&&/^[-*]/.test(l.t.trim()))cur.desc.push(l.t.trim().replace(/^[-*]\s*/,""));else if(cur&&cur.desc.length&&!/^\[|^[-*]|^-\s*\d+\s*-$/.test(l.t.trim())&&!isPN(l.t))cur.desc[cur.desc.length-1]+=" "+l.t.trim()});
+   iss.push(o)}});
+ M.issuesE=iss;
+ // 페이지 유형 표
+ P.forEach((p,i)=>{const t=p.text;let ty="기타";if(i===0)ty="표지";else if(/^\d+p\s*'.+'\s*결과/m.test(t))ty="조사 결과";else if(/^오류 항목\s*\d+/m.test(t))ty="이슈 상세";else if(/^과업\s*\d+\s*[:：]/m.test(t)&&/수행 결과/.test(t))ty="수행 결과";else if(/결과 상세/.test(t))ty="이슈 상세";else if(/검사 항목별 상세 결과/.test(t))ty="검사 항목별 상세 결과";else if(/평가 개요|수행 정보/.test(t))ty="개요";else if(/결과 분석|전체 결과/.test(t))ty="요약";else if(/점수 산정|과업 정보/.test(t))ty="기준·목록";if(!p.lines.length)ty="공백";M.pageTypes.push(ty)});
+ // ---- 공백/비정상 (B)
+ const hash={};
+ P.forEach((p,i)=>{const pg=i+1,body=p.lines.filter(l=>!isPN(l.t));
+  if(p.failed){add({rule:"B",type:"페이지 분석 실패",sev:"확인 필요",cls:"분석 불가",page:pg,msg:"이 페이지를 읽는 중 오류가 발생했습니다.",basis:"렌더링·텍스트 추출 실패 — 재분석으로 재시도할 수 있음(공백 페이지로 판단하지 않음)",conf:"산정 불가"});return}
+  if(!p.lines.length){add({rule:"B",type:"공백 페이지",sev:"보통",cls:p.ink<T.blankInk?"오류 의심":"확인 필요",page:pg,msg:p.ink<T.blankInk?"텍스트와 이미지가 모두 없는 페이지입니다.":"텍스트는 없고 이미지만 있는 페이지입니다(스캔·이미지 페이지 가능).",basis:`렌더링 잉크 비율 ${(p.ink*100).toFixed(2)}% — 의도적 구분 페이지일 수 있어 오류로 확정하지 않음`,conf:p.ink<T.blankInk?"높음":"낮음"});return}
+  if(!body.length){add({rule:"B",type:"페이지 번호만 있는 페이지",sev:"보통",cls:"오류 의심",page:pg,msg:"인쇄 페이지 번호 외에 내용이 없습니다.",basis:`렌더링 잉크 비율 ${(p.ink*100).toFixed(2)}%`,conf:"보통"});return}
+  if(i>0&&body.length<=2&&p.ink<0.02)add({rule:"B",type:"제목만 있는 페이지",sev:"보통",cls:"오류 의심",page:pg,msg:`본문 줄이 ${body.length}개뿐입니다: "${body.map(l=>l.t).join(" / ").slice(0,60)}"`,basis:"제목 외 본문·이미지가 거의 없음(렌더링 잉크 낮음)",conf:"보통",box:bx(pg,body[0])});
+  const key=NS(body.map(l=>l.t).join("")).replace(/\d+p/g,"");if(i>0&&key.length>60){if(hash[key])add({rule:"B",type:"중복 삽입 페이지 의심",sev:"보통",cls:"오류 의심",page:pg,msg:`p.${hash[key]}와 텍스트가 완전히 같습니다.`,basis:"인쇄 페이지 번호를 제외한 전체 텍스트 일치(이미지까지는 비교하지 않음)",conf:"보통",rel:String(hash[key]),box:bx(pg,body[0])});else hash[key]=pg}});
+ // ---- 전문가 상세 (G,H,F,I,A,J)
+ if(M.kind==="expert"){
+  const order=(res.order||[]);const nm={};ITEMS.forEach((x,i)=>nm[i+1]=x);
+  // 항목명 표준 확인(첫 결과표에서 추정)
+  const std={};order.forEach(N=>{const r=res[N];Object.entries(r.names||{}).forEach(([k,v])=>{(std[k]=std[k]||{})[NS(v)]=(std[k][NS(v)]||0)+1})});
+  const stdName={};Object.keys(std).forEach(k=>{stdName[k]=Object.entries(std[k]).sort((a,b)=>b[1]-a[1])[0][0]});
+  M.stdName=stdName;
+  // 목록 vs 결과 페이지 (F,G)
+  if(!listing.length)add({rule:"F",type:"평가 페이지 목록 누락",sev:"보통",cls:"확인 필요",page:ei>=0?ei+1:2,msg:"'전문가 평가 페이지' 목록을 읽지 못했습니다.",basis:"목록 표를 찾지 못함 — 이후 페이지 정보·경로 비교를 일부 건너뜀",conf:"산정 불가"});
+  if(listing.length&&order.length!==listing.length)add({rule:"F",type:"목록과 결과 페이지 수 불일치",sev:"보통",cls:"오류 의심",page:ei+1,msg:`목록 ${listing.length}개 ↔ 결과 페이지 ${order.length}개`,basis:`결과 페이지 번호: ${order.join(",")}`,conf:"높음"});
+  let lastN=0;order.forEach(N=>{const r=res[N];if(N!==lastN+1&&N<=lastN||N>lastN+1)add({rule:"J",type:"결과 페이지 번호 순서 이상",sev:"낮음",cls:"오류 의심",page:r.pg,msg:`'${N}p' 결과가 ${lastN}p 다음에 옵니다.`,basis:"결과 페이지는 1p부터 순서대로 나와야 함",conf:"높음",box:bx(r.pg,r.hline)});lastN=N});
+  const cnt={};order.forEach(N=>cnt[N]=(cnt[N]||0)+1);Object.entries(cnt).filter(e=>e[1]>1).forEach(([N])=>add({rule:"F",type:"페이지 정보 중복",sev:"보통",cls:"오류 의심",page:res[N].pg,msg:`'${N}p' 결과 헤더가 ${cnt[N]}번 나옵니다.`,basis:"동일한 페이지 정보 반복",conf:"높음",box:bx(res[N].pg,res[N].hline)}));
+  order.forEach(N=>{const r=res[N],L=listing[N-1];
+   if(L&&NS(L.name)!==NS(r.name))add({rule:"F",type:"페이지 정보 불일치(목록↔결과 페이지)",sev:"보통",cls:"오류 의심",page:r.pg,ref:`${N}p`,msg:`목록 ${N}번 '${L.name}' ↔ 결과 페이지 '${r.name}'`,basis:`목록(p.${L.page})과 결과 페이지 제목이 다름`,conf:"높음",box:bx(r.pg,r.hline)});
+   if(!r.hasPath)add({rule:"G",type:"평가 경로 누락",sev:"보통",cls:"확정 오류",page:r.pg,ref:`${N}p ${r.name}`,msg:"'◎ 평가 경로' 줄이 없습니다.",basis:"결과 페이지에는 평가 경로가 있어야 함",conf:"높음",box:bx(r.pg,r.hline)});
+   else if(!r.path)add({rule:"G",type:"평가 경로 누락",sev:"보통",cls:"확정 오류",page:r.pg,ref:`${N}p ${r.name}`,msg:"'◎ 평가 경로'가 비어 있습니다.",basis:"경로 값 없음",conf:"높음",box:bx(r.pg,r.pline)});
+   else{const st=r.path.split(">").map(s=>s.trim());if(st.some(s=>!s))add({rule:"G",type:"평가 경로 단계 누락",sev:"보통",cls:"오류 의심",page:r.pg,ref:`${N}p ${r.name}`,msg:`경로 "${r.path}"에 빈 단계가 있습니다.`,basis:"'>' 사이 단계 이름 없음",conf:"높음",box:bx(r.pg,r.pline)});
+    if(L&&L.path&&NS(L.path)!==NS(r.path)){const other=listing.find(x=>x.n!==N&&NS(x.path)===NS(r.path));add({rule:"G",type:other?"다른 화면의 평가 경로 의심":"평가 경로 불일치(목록↔결과 페이지)",sev:"보통",cls:other?"오류 의심":"오류 의심",page:r.pg,ref:`${N}p ${r.name}`,msg:`목록 경로 "${L.path}" ↔ 결과 페이지 경로 "${r.path}"`,basis:other?`결과 페이지 경로가 목록 ${other.n}번(${other.name})의 경로와 같음`:`목록(p.${L.page})과 다름. 실제 서비스 화면과의 일치 여부는 확인 필요`,conf:"높음",box:bx(r.pg,r.pline)})}}
+   // 항목 행 수 / 마크
+   for(let k=1;k<=18;k++){if(!(k in r.marks))add({rule:"B",type:"결과 항목 행 누락",sev:"보통",cls:"오류 의심",page:r.pg,ref:`${N}p ${r.name} #${k}`,msg:`항목 ${k}(${nm[k]}) 행을 읽지 못했습니다.`,basis:"18개 항목 행이 모두 있어야 함(표 일부 누락 또는 읽기 실패)",conf:"보통",box:bx(r.pg,r.hline)});else if(r.marks[k]===null)add({rule:"H",type:"결과 셀 비어 있음(이미지일 수 있음)",sev:"확인 필요",cls:"분석 불가",page:r.pg,ref:`${N}p ${r.name} #${k}`,msg:`항목 ${k} ${r.names[k]}의 결과 기호를 텍스트로 읽지 못했습니다.`,basis:"기호가 이미지·도형이면 텍스트 추출에 잡히지 않음 — 이미지 기반 기호 인식은 미지원",conf:"산정 불가",box:bx(r.pg,r.rows[k])});
+    else if(stdName[k]&&NS(r.names[k])!==stdName[k]&&r.names[k])add({rule:"F",type:"항목명 불일치",sev:"낮음",cls:"확인 필요",page:r.pg,ref:`${N}p #${k}`,msg:`항목 ${k}: '${r.names[k]}' (다른 페이지는 '${stdName[k]}')`,basis:"같은 번호의 항목명이 페이지마다 다름",conf:"보통",box:bx(r.pg,r.rows[k])})}
+   // 콘텐츠 존재 유무 vs 마크
+   r.info.forEach(l=>{const nmz=NS(l.t.replace(/^\d+\s+/,""));const k=ITEMS.findIndex(x=>nmz.startsWith(NS(x)))+1;if(!k)return;const yes=/있음$/.test(l.t.trim()),mk=r.marks[k];if(!yes&&mk==="X")add({rule:"H",type:"콘텐츠 없음인데 X 표시",sev:"보통",cls:"오류 의심",page:r.pg,ref:`${N}p #${k}`,msg:`${nm[k]}: 페이지 정보는 '없음'인데 결과는 X`,basis:`"${l.t.slice(0,50)}"`,conf:"보통",box:bx(r.pg,r.rows[k])});if(yes&&mk==="-")add({rule:"H",type:"콘텐츠 있음인데 해당없음 표시",sev:"보통",cls:"오류 의심",page:r.pg,ref:`${N}p #${k}`,msg:`${nm[k]}: 페이지 정보는 '있음'인데 결과는 '-'`,basis:`"${l.t.slice(0,50)}"`,conf:"보통",box:bx(r.pg,r.rows[k])})})});
+  // 검사항목별 상세 결과 매트릭스 (I)
+  const mi=P.findIndex(p=>/검사 항목별 상세 결과/.test(p.text)&&p.lines.some(l=>/^항목\s*별\s*배점/.test(l.t)));let leg=null;
+  if(mi>=0){const L=P[mi].lines,num=s=>s.trim().split(/\s+/);const bi=L.findIndex(l=>/^항목\s*별\s*배점/.test(l.t)),ci=L.findIndex(l=>/준수 페이지/.test(l.t)),si=L.findIndex(l=>/^유형 평가 점수/.test(l.t));
+   const pts=num(L[bi].t.replace(/^항목\s*별\s*배점/,"")),ok=ci>0?num(L[ci-1].t):[],tot=ci>0&&L[ci+1]?num(L[ci+1].t):[],sc=si>=0?num(L[si].t.replace(/^유형 평가 점수/,"")):[];
+   const mrows={};L.forEach(l=>{const w=l.w;if(w.length>=20&&/^\d+$/.test(w[0].t)){const tail=w.slice(-18).map(x=>MKN(x.t));if(tail.every(Boolean))mrows[+w[0].t]={marks:tail,line:l,name:w.slice(1,-18).map(x=>x.t).join(" ")}}});
+   M.matrix={rows:Object.keys(mrows).length};
+   if(pts.length===18&&ok.length===18&&tot.length===18&&Object.keys(mrows).length){let allOK=true;
+    for(let c=0;c<18;c++){const col=Object.values(mrows).map(r=>r.marks[c]),o=col.filter(x=>x==="O").length,x=col.filter(x=>x==="X").length;
+     if(+ok[c]!==o||+tot[c]!==o+x&&!(tot[c]==="-")){allOK=false;add({rule:"I",type:"검사 항목별 표 집계 불일치",sev:"보통",cls:"오류 의심",page:mi+1,ref:`항목 ${c+1} ${nm[c+1]}`,msg:`표의 O ${o}개·X ${x}개 ↔ 기재 준수 ${ok[c]} / 총 ${tot[c]}`,basis:"준수 페이지 수=O 개수, 총 페이지 수=O+X 개수로 검증(범례: O 준수, X 미준수, - 해당없음)",conf:"높음",box:bx(mi+1,L[ci-1])})}
+     if(ok[c]!=="-"&&tot[c]!=="-"&&pts[c]!=="-"&&+tot[c]>0&&sc[c]!==undefined){const e=Math.round(+ok[c]/+tot[c]*+pts[c]*10)/10;if(Math.abs(e-+sc[c])>0.11)add({rule:"I",type:"항목 점수 계산 불일치",sev:"보통",cls:"오류 의심",page:mi+1,ref:`항목 ${c+1} ${nm[c+1]}`,msg:`준수 ${ok[c]}÷총 ${tot[c]}×배점 ${pts[c]}=${e} ↔ 기재 ${sc[c]}`,basis:"보고서 p.3의 항목 점수 산식(준수 페이지 수 ÷ 제공 페이지 수 × 배점)",conf:"높음",box:bx(mi+1,L[si])})}}
+    leg=allOK;
+    // 매트릭스 vs 결과 페이지 (I)
+    Object.entries(mrows).forEach(([N,mr])=>{const r=res[N];if(!r)return;for(let k=1;k<=18;k++){const a=mr.marks[k-1],b=r.marks[k];if(b&&a!==b)add({rule:"I",type:"요약표와 페이지별 결과 불일치",sev:"보통",cls:"오류 의심",page:r.pg,ref:`${N}p ${r.name} #${k}`,msg:`${nm[k]}: 페이지 결과 ${b} ↔ 검사 항목별 상세 결과표(p.${mi+1}) ${a}`,basis:"같은 페이지·항목의 기호가 두 표에서 다름",conf:"높음",box:bx(r.pg,r.rows[k]),rel:String(mi+1)})}});
+    Object.keys(res).filter(k=>/^\d+$/.test(k)&&!mrows[k]).forEach(N=>add({rule:"I",type:"요약표에 없는 페이지",sev:"보통",cls:"오류 의심",page:mi+1,ref:`${N}p`,msg:`${N}p 결과가 검사 항목별 상세 결과표에 없습니다.`,basis:"표 행 수 ≠ 결과 페이지 수",conf:"보통"}));
+    Object.keys(mrows).filter(k=>!res[k]).forEach(N=>add({rule:"I",type:"결과 페이지 없는 요약표 행",sev:"보통",cls:"오류 의심",page:mi+1,ref:`${N}번`,msg:`요약표 ${N}번 행에 해당하는 페이지 결과가 없습니다.`,basis:"결과 페이지 누락 가능",conf:"보통",box:bx(mi+1,mrows[N].line)}))}
+   else add({rule:"I",type:"검사 항목별 표 분석 불가",sev:"확인 필요",cls:"분석 불가",page:mi+1,msg:"배점·준수·총 페이지 행 또는 18열 표를 읽지 못했습니다.",basis:`배점 ${pts.length}열, 준수 ${ok.length}열, 총 ${tot.length}열, 표 행 ${Object.keys(mrows).length}`,conf:"산정 불가"})}
+  else add({rule:"J",type:"필수 섹션 누락",sev:"보통",cls:"오류 의심",page:null,msg:"'검사 항목별 상세 결과' 표 페이지를 찾지 못했습니다.",basis:"전문가 보고서 필수 섹션",conf:"보통"});
+  M.legendVerified=leg;
+  // 오류 항목 상세 (F,G,H,A)
+  const dupSeen=[];
+  iss.forEach(o=>{const r=res[o.pn],k=o.item;const ref=`${o.pn}p ${o.pname||""} · 항목 ${k}`;
+   if(!o.pline)add({rule:"F",type:"페이지 정보 누락",sev:"보통",cls:"오류 의심",page:o.pg,ref:`항목 ${k}`,msg:"'• 페이지 :' 줄이 없습니다.",basis:"오류 항목 페이지에는 대상 페이지 정보가 있어야 함",conf:"높음",box:bx(o.pg,o.hline)});
+   if(stdName[k]&&NS(o.iname)!==stdName[k])add({rule:"F",type:"이슈 번호와 항목명 불일치",sev:"높음",cls:"확정 오류",page:o.pg,ref:`항목 ${k}`,msg:`'오류 항목 ${k}.${o.iname}' — 번호 ${k}의 표준 항목명은 '${stdName[k]}'입니다.`,basis:"결과 표의 번호·항목명과 오류 항목 제목 비교",conf:"높음",box:bx(o.pg,o.hline)});
+   if(o.badSeq)o.badSeq.forEach(([w,g,l])=>add({rule:"F",type:"이슈 번호 순서 이상",sev:"낮음",cls:"오류 의심",page:o.pg,ref,msg:`이슈 번호 ${w}이(가) 와야 하는데 ${g}입니다.`,basis:"이슈 번호는 1부터 연속되어야 함",conf:"높음",box:bx(o.pg,l)}));
+   if(!o.issues.length)add({rule:"B",type:"이슈 내용 없는 오류 항목 페이지",sev:"보통",cls:"오류 의심",page:o.pg,ref,msg:"이슈 번호·제목이 있는 줄이 없습니다.",basis:"제목만 있고 본문이 없거나 형식이 다름",conf:"보통",box:bx(o.pg,o.hline)});
+   o.issues.forEach(is=>{if(!is.desc.length)add({rule:"B",type:"이슈 설명 누락",sev:"보통",cls:"오류 의심",page:o.pg,ref:`${ref} #${is.no}`,msg:`이슈 ${is.no} '${is.title}'에 설명(-, * 줄)이 없습니다.`,basis:"문제 설명·개선 권고 줄 없음",conf:"보통",box:bx(o.pg,is.line)});
+    const full=is.title+" "+is.desc.join(" ");const own=KW[k-1]&&KW[k-1].test(full),oth=KW.map((x,j)=>j+1!==k&&x.test(full)?j+1:0).filter(Boolean);
+    if(KW[k-1]&&!own&&oth.length)add({rule:"F",type:"이슈 내용과 항목 불일치 의심",sev:"보통",cls:"확인 필요",page:o.pg,ref:`${ref} #${is.no}`,msg:`항목 ${k}(${nm[k]})인데 내용은 ${oth.slice(0,2).map(j=>`항목 ${j}(${nm[j]})`).join(", ")} 관련으로 보입니다.`,basis:`제목 "${is.title.slice(0,40)}" — 키워드 기반 추정이라 확인 필요`,conf:"낮음",box:bx(o.pg,is.line)});
+    if(M.plat==="Android"&&PLAT_I.test(full)||M.plat==="iOS"&&PLAT_A.test(full))add({rule:"E",type:"이슈 설명에 다른 플랫폼 용어",sev:"높음",cls:"오류 의심",page:o.pg,ref:`${ref} #${is.no}`,msg:`${M.plat} 보고서의 이슈 설명에 ${M.plat==="Android"?"iOS":"Android"} 전용 용어가 있습니다.`,basis:`"${full.match(M.plat==="Android"?PLAT_I:PLAT_A)[0]}" 포함(다른 플랫폼 보고서 복사 가능성)`,conf:"보통",box:bx(o.pg,is.line)});
+    dupSeen.push({o,is,full})});
+   if(!r)add({rule:"F",type:"오류 항목의 대상 페이지 없음",sev:"보통",cls:"오류 의심",page:o.pg,ref,msg:`'${o.pn}p' 결과 페이지가 보고서에 없습니다.`,basis:"오류 항목이 가리키는 페이지 정보와 결과 페이지 불일치",conf:"높음",box:bx(o.pg,o.pline)});
+   else{if(NS(r.name)!==NS(o.pname))add({rule:"F",type:"페이지 정보 불일치(오류 항목↔결과 페이지)",sev:"보통",cls:"오류 의심",page:o.pg,ref,msg:`오류 항목 '${o.pname}' ↔ ${o.pn}p 결과 '${r.name}'`,basis:`결과 페이지 p.${r.pg}`,conf:"높음",box:bx(o.pg,o.pline)});
+    if(r.hasPath&&NS(r.path)!==NS(o.ppath||""))add({rule:"G",type:"평가 경로 불일치(오류 항목↔결과 페이지)",sev:"보통",cls:"오류 의심",page:o.pg,ref,msg:`오류 항목 경로 "${o.ppath||""}" ↔ 결과 페이지 경로 "${r.path}"`,basis:`결과 페이지 p.${r.pg}. 실제 서비스 화면과의 일치는 확인 필요`,conf:"높음",box:bx(o.pg,o.pline)});
+    const mk=r.marks[k];if(mk!=="X"&&mk!==undefined){const desc=o.issues.map(i=>i.title).join(" / ");add({rule:"H",type:mk===null?"X 표시 누락 의심(결과 칸이 비어 있음)":"X 표시 누락 의심",sev:"보통",cls:"오류 의심",page:r.pg,ref:`${o.pn}p ${r.name} · 항목 ${k}(${nm[k]})`,msg:`오류 항목 상세(p.${o.pg})에 이슈 ${o.issues.length}건이 있는데 결과 표시는 '${mk===null?"읽지 못함":mk}'입니다.`,basis:`이슈: ${desc.slice(0,80)} — 범례 ${leg===true?"검증됨(표 집계 산식으로 O/X 의미 확인)":"미검증"}${mk===null?" · 결과 칸에 기호 텍스트가 없음(이미지 기호일 수 있음, 이미지 기호 인식은 미지원)":""}`,conf:mk===null?"보통":(leg===true?"높음":"보통"),box:bx(r.pg,r.rows[k]),rel:String(o.pg)})}}});
+  // X는 있는데 오류 항목 없음
+  const haveIss=new Set(iss.map(o=>o.pn+"|"+o.item));
+  order.forEach(N=>{const r=res[N];for(let k=1;k<=18;k++)if(r.marks[k]==="X"&&iss.length&&!haveIss.has(N+"|"+k))add({rule:"H",type:"X 표시는 있으나 오류 항목 상세 없음",sev:"보통",cls:"확인 필요",page:r.pg,ref:`${N}p ${r.name} · 항목 ${k}(${nm[k]})`,msg:"결과는 X인데 해당 페이지·항목의 '오류 항목' 상세 페이지가 없습니다.",basis:"설명 누락 또는 X 표시 오류 가능성",conf:"보통",box:bx(r.pg,r.rows[k])})});
+  // 설명 모순: 오류 항목 상세의 '문제 없음' 류
+  iss.forEach(o=>o.issues.forEach(is=>{const t=is.desc.join(" ");if(/문제\s*없|양호|적절하게 제공/.test(t)&&!/부적절|않|미제공/.test(t))add({rule:"H",type:"설명과 결과 표시 모순 의심",sev:"보통",cls:"확인 필요",page:o.pg,ref:`${o.pn}p · 항목 ${o.item} #${is.no}`,msg:"오류 항목인데 설명이 '문제 없음/양호'로 읽힙니다.",basis:`"${t.slice(0,60)}"`,conf:"낮음",box:bx(o.pg,is.line)})}));
+  // 중복 이슈 (A)
+  for(let a=0;a<dupSeen.length;a++)for(let b=a+1;b<dupSeen.length;b++){const x=dupSeen[a],y=dupSeen[b],s=sim(x.full,y.full);if(s<0.8)continue;const same=x.o.pn===y.o.pn&&x.o.item===y.o.item;
+   if(same||(s>=0.97&&(x.is.desc.join(" ").length>=80)))add({rule:"A",type:same?"동일 페이지·항목 중복 이슈 의심":"유사 이슈 반복(다른 화면)",sev:"보통",cls:same?"오류 의심":"확인 필요",page:y.o.pg,ref:`${y.o.pn}p 항목${y.o.item} #${y.is.no}`,msg:`p.${x.o.pg}(${x.o.pn}p 항목${x.o.item} #${x.is.no})와 ${(s*100).toFixed(0)}% 유사: "${y.is.title.slice(0,40)}"`,basis:same?`같은 페이지·검사 항목에서 제목·설명이 거의 같음. 차이: ${diff(x.full,y.full)}`:`서로 다른 화면(${x.o.pn}p / ${y.o.pn}p)에서 같은 내용 — 실제 다른 화면의 같은 문제일 수 있어 검수자가 판단`,conf:same?"높음":"낮음",box:bx(y.o.pg,y.is.line),rel:String(x.o.pg)})}
+  M.issues=dupSeen.map(d=>({page:d.o.pg,pn:d.o.pn,item:d.o.item,no:d.is.no,title:d.is.title,desc:d.is.desc.join(" ")}));
+  // 필수 섹션(J) 순서
+  let lastK=0,lastNo=0;iss.forEach(o=>{if(o.pn<lastNo||o.pn===lastNo&&o.item<lastK)add({rule:"J",type:"오류 항목 페이지 순서 이상",sev:"낮음",cls:"확인 필요",page:o.pg,msg:`${o.pn}p 항목${o.item}이(가) ${lastNo}p 항목${lastK} 뒤에 옵니다.`,basis:"오류 항목은 페이지·항목 번호 순으로 정렬되는 것이 일반적(의도된 편집일 수 있음)",conf:"낮음",box:bx(o.pg,o.hline)});lastNo=o.pn;lastK=o.item});
+ }
+ // ---- 사용자 테스트
+ if(M.kind==="user"){
+  const tasks={},order=[];let curTask=0;const detail=[];let sec="";
+  P.forEach((p,i)=>{const pg=i+1,hm=p.lines.map(l=>[l,/^과업\s*(\d+)\s*[:：]\s*(.+)$/.exec(l.t.trim())]).find(x=>x[1]);
+   if(hm&&/수행 결과/.test(p.text)){const N=+hm[1][1],hi=p.lines.indexOf(hm[0]),pl=p.lines[hi+1],ph=pl&&/>/.test(pl.t)||pl&&/^카카오|^[가-힣A-Za-z]+\s*>/.test(pl.t)?pl:null,o={},ic={};let pextra="";if(ph){const n2=p.lines[hi+2];if(n2&&n2.y-ph.y<20&&!/^\d+\s|수행 결과|장애인/.test(n2.t)&&!/^과업/.test(n2.t))pextra=" "+n2.t.trim()}
+    p.lines.forEach(l=>{const q=/^(전맹|저시력|상지)\s*(?:시각|지체)?\s*장애인\s+(.+)$/.exec(l.t);if(q){const k={전맹:"bl",저시력:"lo",상지:"up"}[q[1]];o[k]={t:/불편사항이 없|특별한/.test(q[2])?"s":/불편한 사항|가능하나/.test(q[2])?"m":/불가/.test(q[2])?"f":null,line:l}}});
+    tasks[N]={pg,N,title:hm[1][2].trim(),path:ph?(ph.t.trim()+pextra):"",pline:ph,hline:hm[0],res:o};order.push(N);curTask=N}
+   if(/결과 상세/.test(p.text)){p.lines.forEach(l=>{const s=/^(전맹|저시력|상지)\s*(?:시각|지체)?\s*장애인$/.exec(l.t.trim());if(s)sec={전맹:"bl",저시력:"lo",상지:"up"}[s[1]];const q=/^(\d+)\s*\[(\d+)\]\s*(.+)$/.exec(l.t.trim());if(q&&sec)detail.push({pg,task:curTask,sec,no:+q[1],code:+q[2],title:q[3],line:l,desc:[]});
+    else if(detail.length&&detail[detail.length-1].pg===pg&&/^[-*]/.test(l.t.trim()))detail[detail.length-1].desc.push(l.t.trim().replace(/^[-*]\s*/,""))})}});
+  M.tasks=order.length;
+  const maxN=Math.max(0,...order);for(let n=1;n<=maxN;n++)if(!tasks[n])add({rule:"J",type:"과업 결과 페이지 누락",sev:"보통",cls:"오류 의심",page:null,ref:`과업 ${n}`,msg:`과업 ${n} 결과 페이지가 없습니다(과업 ${maxN}까지 있음).`,basis:"과업 번호는 연속되어야 함",conf:"높음"});
+  const cn={};order.forEach(n=>cn[n]=(cn[n]||0)+1);Object.entries(cn).filter(e=>e[1]>1).forEach(([n])=>add({rule:"F",type:"과업 페이지 중복",sev:"보통",cls:"오류 의심",page:tasks[n].pg,ref:`과업 ${n}`,msg:`과업 ${n} 헤더가 ${cn[n]}번 나옵니다.`,basis:"동일 페이지 정보 반복",conf:"높음"}));
+  // 목록(과업 정보)
+  const lst={};P.forEach((p,i)=>{if(!/과업 상세 내용/.test(p.text)&&!/^05 과업 정보|과업 정보/m.test(p.text))return;p.lines.forEach((l,j)=>{const m=/^(\d+)\s+(.+)$/.exec(l.t.trim());const nx=p.lines[j+1];if(m&&nx&&/>/.test(nx.t)&&l.x0<170&&!lst[+m[1]]){let pa=nx.t.trim();const n2=p.lines[j+2];if(n2&&n2.y-nx.y<20&&!/^\d+\s/.test(n2.t)&&!isPN(n2.t)&&!/^[-–]/.test(n2.t))pa+=" "+n2.t.trim();lst[+m[1]]={title:m[2],path:pa,pg:i+1,line:nx}}})});
+  // 요약표
+  const sm={};let spg=0;P.forEach((p,i)=>{p.lines.forEach(l=>{const m=/^(\d+)\s+(.+?)\s+(성공|미흡|실패)\s+(성공|미흡|실패)\s+(성공|미흡|실패)$/.exec(l.t.trim());if(m&&l.x0<200){sm[+m[1]]={title:m[2],r:[m[3],m[4],m[5]],line:l,pg:i+1};spg=i+1}})});
+  const KR={성공:"s",미흡:"m",실패:"f"},TY=["bl","lo","up"],TN={bl:"전맹",lo:"저시력",up:"상지"};
+  order.forEach(N=>{const t=tasks[N],L=lst[N],S=sm[N];
+   if(!t.path)add({rule:"G",type:"평가 경로 누락",sev:"보통",cls:"확정 오류",page:t.pg,ref:`과업 ${N} ${t.title}`,msg:"과업 제목 아래 평가 경로(예: 앱 > 탭 > 동작)가 없습니다.",basis:"과업 페이지 부제 줄에 경로가 없음",conf:"높음",box:bx(t.pg,t.hline)});
+   else{const st=t.path.split(">").map(s=>s.trim());if(st.some(s=>!s))add({rule:"G",type:"평가 경로 단계 누락",sev:"보통",cls:"오류 의심",page:t.pg,ref:`과업 ${N}`,msg:`경로 "${t.path}"에 빈 단계가 있습니다.`,basis:"'>' 사이 단계 이름 없음",conf:"높음",box:bx(t.pg,t.pline)});
+    if(M.svc&&!t.path.startsWith(M.svc)&&!/^[^>]*>/.test(t.path.split(">")[0]+">"))0;
+    if(M.svc&&!NS(t.path.split(">")[0]).includes(M.svc)&&!NS(t.path.split(">")[0]).includes(NS("카카오")))add({rule:"G",type:"다른 서비스명으로 시작하는 평가 경로",sev:"보통",cls:"오류 의심",page:t.pg,ref:`과업 ${N}`,msg:`경로가 "${t.path.split(">")[0].trim()}"으로 시작합니다(표지 서비스 ${M.svc}).`,basis:"경로 첫 단계는 조사 대상 앱이어야 함",conf:"보통",box:bx(t.pg,t.pline)});
+    if(L&&NS(L.path)!==NS(t.path)){const other=Object.entries(lst).find(([k,v])=>+k!==N&&NS(v.path)===NS(t.path));add({rule:"G",type:other?"다른 과업의 평가 경로 의심":"평가 경로 불일치(과업 정보↔과업 페이지)",sev:"보통",cls:"오류 의심",page:t.pg,ref:`과업 ${N} ${t.title}`,msg:`과업 정보(p.${L.pg}) "${L.path}" ↔ 과업 페이지 "${t.path}"`,basis:other?`과업 페이지 경로가 과업 ${other[0]}의 경로와 같음`:"두 위치의 경로가 다름. 실제 서비스 화면과의 일치는 확인 필요",conf:"높음",box:bx(t.pg,t.pline)})}}
+   if(L&&NS(L.title)!==NS(t.title))add({rule:"F",type:"과업명 불일치(과업 정보↔과업 페이지)",sev:"보통",cls:"오류 의심",page:t.pg,ref:`과업 ${N}`,msg:`과업 정보 '${L.title}' ↔ 과업 페이지 '${t.title}'`,basis:`과업 정보 p.${L.pg}`,conf:"높음",box:bx(t.pg,t.hline)});
+   if(!L&&Object.keys(lst).length)add({rule:"G",type:"과업 정보에 없는 과업",sev:"보통",cls:"오류 의심",page:t.pg,ref:`과업 ${N}`,msg:`과업 ${N}이(가) 과업 정보 목록에 없습니다.`,basis:"목록 누락 또는 번호 오류",conf:"보통",box:bx(t.pg,t.hline)});
+   // 아이콘 (C/D) + 요약표
+   const pg=P[t.pg-1];
+   TY.forEach((k,j)=>{const r=t.res[k],ic=pg.icons?pg.icons[j]:undefined;
+    if(!r||!r.t){add({rule:"I",type:"수행 결과 문구 없음/판독 불가",sev:"보통",cls:r?"분석 불가":"오류 의심",page:t.pg,ref:`과업 ${N} ${TN[k]}`,msg:`${TN[k]} 결과 문구를 ${r?"해석하지 못했습니다":"찾지 못했습니다"}.`,basis:r?`"${r.line.t.slice(0,50)}"`:"전맹·저시력·상지 3줄이 모두 있어야 함",conf:r?"산정 불가":"높음",box:bx(t.pg,r&&r.line||t.hline)});return}
+    if(pg.icons===null||pg.icons===undefined){if(j===0)add({rule:"C",type:"수행 결과 아이콘 인식 불가",sev:"확인 필요",cls:"분석 불가",page:t.pg,ref:`과업 ${N}`,msg:"결과 줄 오른쪽의 아이콘 3개를 찾지 못했습니다(아이콘 누락 또는 렌더링 문제).",basis:"렌더링 이미지에서 노란 아이콘이 3개 검출되지 않음 — 누락 여부는 육안 확인 필요",conf:"산정 불가",box:bx(t.pg,t.hline)});return}
+    if(ic===null)add({rule:"C",type:"수행 결과 아이콘 판독 불가",sev:"확인 필요",cls:"분석 불가",page:t.pg,ref:`과업 ${N} ${TN[k]}`,msg:"아이콘은 있으나 표정을 판독하지 못했습니다.",basis:"색·형태 특징이 기준과 맞지 않음",conf:"산정 불가",box:bx(t.pg,r.line)});
+    else if(ic!==r.t)add({rule:"D",type:"결과 문구와 아이콘 불일치",sev:"높음",cls:"확정 오류",page:t.pg,ref:`과업 ${N} ${TN[k]}`,msg:`문구는 '${{s:"성공",m:"미흡",f:"실패"}[r.t]}'인데 아이콘은 '${{s:"성공(웃음)",m:"미흡(보통)",f:"실패(눈물)"}[ic]}'입니다.`,basis:`"${r.line.t.slice(0,40)}" ↔ 렌더링 이미지의 아이콘 색·형태 분석(눈물 파랑 픽셀·표정선 비율)`,conf:"보통",box:bx(t.pg,r.line)});
+    if(S&&KR[S.r[j]]!==r.t)add({rule:"I",type:"요약표와 과업 페이지 결과 불일치",sev:"높음",cls:"확정 오류",page:S.pg,ref:`과업 ${N} ${TN[k]}`,msg:`요약표(p.${S.pg}) ${S.r[j]} ↔ 과업 페이지(p.${t.pg}) ${{s:"성공",m:"미흡",f:"실패"}[r.t]}`,basis:"같은 과업·장애유형의 결과가 두 곳에서 다름",conf:"높음",box:bx(S.pg,S.line),rel:String(t.pg)})});
+   if(!S&&Object.keys(sm).length)add({rule:"I",type:"요약표에 없는 과업",sev:"보통",cls:"오류 의심",page:spg,ref:`과업 ${N}`,msg:`과업 ${N}이(가) 요약표에 없습니다.`,basis:"요약표 행 누락",conf:"높음"})});
+  Object.keys(sm).filter(n=>!tasks[n]).forEach(n=>add({rule:"I",type:"과업 페이지 없는 요약표 행",sev:"보통",cls:"오류 의심",page:sm[n].pg,ref:`과업 ${n}`,msg:`요약표 과업 ${n}에 해당하는 과업 페이지가 없습니다.`,basis:"과업 페이지 누락 가능",conf:"높음",box:bx(sm[n].pg,sm[n].line)}));
+  // 요약 퍼센트
+  const pcts=[];P.forEach((p,i)=>p.lines.forEach(l=>{const m=/^(\d+)\s+(\d+)\s+(\d+)$/.exec(l.t.trim());if(m&&/장애인|성공|%/.test(p.text)&&/결과 분석/.test(p.text))pcts.push({pg:i+1,v:[+m[1],+m[2],+m[3]],line:l})}));
+  const tot=/총\s*(\d+)\s*개\s*과업/.exec(txt);if(tot&&+tot[1]!==order.length)add({rule:"I",type:"총 과업 수 불일치",sev:"보통",cls:"오류 의심",page:P.findIndex(p=>/총\s*\d+\s*개\s*과업/.test(p.text))+1,msg:`요약 '총 ${tot[1]}개 과업' ↔ 과업 페이지 ${order.length}개`,basis:"과업 수 비교",conf:"높음"});
+  if(pcts.length===3)TY.forEach((k,j)=>{const c={s:0,m:0,f:0};order.forEach(n=>{const r=tasks[n].res[k];if(r&&r.t)c[r.t]++});const n=c.s+c.m+c.f;if(!n)return;const e=[c.s,c.m,c.f].map(x=>Math.round(x/n*100)),g=pcts[j].v;if(e.some((x,z)=>Math.abs(x-g[z])>1))add({rule:"I",type:"요약 비율과 과업별 집계 불일치",sev:"높음",cls:"확정 오류",page:pcts[j].pg,ref:TN[k],msg:`${TN[k]}: 요약 성공/미흡/실패 ${g.join("/")}% ↔ 과업 페이지 집계 ${e.join("/")}% (${c.s}/${c.m}/${c.f}건)`,basis:"비율=건수÷전체 과업(반올림)로 비교 — 분모는 과업 수로 가정(문서에 명시된 계산식은 없음)",conf:"보통",box:bx(pcts[j].pg,pcts[j].line)})});
+  else if(order.length)add({rule:"I",type:"요약 비율 분석 불가",sev:"확인 필요",cls:"분석 불가",page:P.findIndex(p=>/결과 분석/.test(p.text))+1||null,msg:`요약 비율 줄을 ${pcts.length}개 읽었습니다(3개 필요).`,basis:"요약 페이지 형식이 다르거나 일부가 읽히지 않음",conf:"산정 불가"});
+  // 이슈 상세(코드 vs 제목, 중복)
+  detail.forEach(d=>{const full=d.title+" "+d.desc.join(" "),k=d.code;if(k<1||k>18){add({rule:"F",type:"이슈 번호 범위 오류",sev:"보통",cls:"오류 의심",page:d.pg,ref:`과업 ${d.task} #${d.no}`,msg:`[${k}]은(는) 1~18 범위 밖입니다.`,basis:"검사 항목 번호는 1~18",conf:"높음",box:bx(d.pg,d.line)});return}
+   const own=KW[k-1].test(full),oth=KW.map((x,j)=>j+1!==k&&x.test(full)?j+1:0).filter(Boolean);
+   if(!own&&oth.length)add({rule:"F",type:"이슈 번호와 내용 불일치 의심",sev:"보통",cls:"확인 필요",page:d.pg,ref:`과업 ${d.task} #${d.no} [${k}]`,msg:`[${k}] ${nm0(k)}인데 내용은 항목 ${oth.slice(0,2).join(", ")}(${oth.slice(0,2).map(nm0).join(", ")}) 관련으로 보입니다.`,basis:`"${d.title.slice(0,40)}" — 키워드 기반 추정`,conf:"낮음",box:bx(d.pg,d.line)});
+   if(M.plat==="Android"&&PLAT_I.test(full)||M.plat==="iOS"&&PLAT_A.test(full))add({rule:"E",type:"이슈 설명에 다른 플랫폼 용어",sev:"높음",cls:"오류 의심",page:d.pg,ref:`과업 ${d.task} #${d.no}`,msg:`${M.plat} 보고서에 ${M.plat==="Android"?"iOS":"Android"} 전용 용어가 있습니다.`,basis:full.match(M.plat==="Android"?PLAT_I:PLAT_A)[0],conf:"보통",box:bx(d.pg,d.line)});
+   const t=tasks[d.task];if(t&&t.res[d.sec]&&t.res[d.sec].t==="s")add({rule:"H",type:"성공인데 이슈 기재(설명-결과 모순)",sev:"보통",cls:"오류 의심",page:d.pg,ref:`과업 ${d.task} ${TN[d.sec]}`,msg:`${TN[d.sec]} 결과는 '성공(불편사항 없음)'인데 이슈 상세가 있습니다.`,basis:`이슈 "${d.title.slice(0,40)}"`,conf:"높음",box:bx(d.pg,d.line),rel:String(t.pg)})});
+  const detailKeys={};detail.forEach(d=>{const k=d.sec+"|"+d.task;detailKeys[k]=1});
+  order.forEach(n=>TY.forEach(k=>{const r=tasks[n].res[k];if(r&&(r.t==="m"||r.t==="f")&&!detailKeys[k+"|"+n])add({rule:"H",type:"미흡·실패인데 이슈 상세 없음",sev:"보통",cls:"확인 필요",page:tasks[n].pg,ref:`과업 ${n} ${TN[k]}`,msg:`${TN[k]} 결과가 '${r.t==="m"?"미흡":"실패"}'인데 '결과 상세'의 이슈가 없습니다.`,basis:"수행 불가 사유·불편사항 설명 누락 가능(요약 페이지로 대체되었을 수 있음)",conf:"보통",box:bx(tasks[n].pg,r.line)})}));
+  for(let a=0;a<detail.length;a++)for(let b=a+1;b<detail.length;b++){const x=detail[a],y=detail[b];if(x.sec!==y.sec)continue;const s=sim(x.title+x.desc.join(" "),y.title+y.desc.join(" "));if(s>=0.8){const same=x.task===y.task;if(same||(s>=0.97&&(x.desc.join(" ").length>=80)))add({rule:"A",type:same?"동일 과업 내 중복 이슈 의심":"유사 이슈 반복(다른 과업)",sev:"보통",cls:same?"오류 의심":"확인 필요",page:y.pg,ref:`과업 ${y.task} ${TN[y.sec]} #${y.no}`,msg:`p.${x.pg}(과업 ${x.task} #${x.no})와 ${(s*100).toFixed(0)}% 유사: "${y.title.slice(0,40)}"`,basis:same?"같은 과업·장애유형에서 제목·설명이 거의 같음":"서로 다른 과업에서 같은 내용 — 같은 화면의 반복 문제일 수 있어 검수자가 판단",conf:same?"높음":"낮음",box:bx(y.pg,y.line),rel:String(x.pg)})}}
+  M.issues=detail.map(d=>({page:d.pg,pn:d.task,item:d.code,no:d.no,title:d.title,desc:d.desc.join(" "),sec:d.sec}));
+  M.taskList=Object.fromEntries(Object.entries(tasks).map(([n,t])=>[n,{title:t.title,path:t.path,res:Object.fromEntries(Object.entries(t.res).map(([k,v])=>[k,v.t]))}]));
+ }
+ // ---- 필수 섹션 (J)
+ (T.req[M.kind]||[]).forEach(([name,rx])=>{const R=rx instanceof RegExp?rx:new RegExp(rx.s||rx,rx.f||"");if(!P.some(p=>R.test(p.text)))add({rule:"J",type:"필수 섹션 누락",sev:"보통",cls:"오류 의심",page:null,msg:`필수 섹션 '${name}'을(를) 찾지 못했습니다.`,basis:`보고서 유형별 기준(${KO}) — 기준은 설정에서 수정 가능, 의도된 편집일 수 있음`,conf:"보통"})});
+ M.pageTypes.forEach((t,i)=>{});
+ F.forEach((f,i)=>{f.id=i+1;f.fp=[f.rule,f.type,f.page,f.ref,f.msg].join("|")});
+ return{meta:M,findings:F};
+ function nm0(k){return ITEMS[k-1]}
+ function diff(a,b){const A=a.split(/\s+/),B=new Set(b.split(/\s+/)),d=A.filter(x=>!B.has(x));return d.length?d.slice(0,6).join(" "):"거의 없음"}
+}
+// ---- 여러 PDF 교차 검수
+function cross(docs){const F=[];const add=o=>F.push(Object.assign({rule:"X",sev:"보통",cls:"오류 의심",page:null,ref:"",conf:"보통",box:null,rel:"",printed:null},o));
+ const by={};docs.forEach(d=>{if(d.meta.svc)(by[d.meta.svc]=by[d.meta.svc]||[]).push(d)});
+ Object.values(by).forEach(g=>{
+  const keys={};g.forEach(d=>{const k=d.meta.kind+"|"+d.meta.plat;(keys[k]=keys[k]||[]).push(d)});
+  Object.entries(keys).forEach(([k,a])=>{if(a.length>1)add({file:a[1].file,type:"같은 서비스·유형·플랫폼 보고서 중복",msg:`${a.map(x=>x.file).join(" / ")}`,basis:`${a[0].meta.svc} ${k.replace("user","사용자").replace("expert","전문가").replace("|"," ")} 보고서가 ${a.length}개 업로드됨`,page:1,cls:"확인 필요"})});
+  const vers=new Set(g.map(d=>d.meta.ver).filter(Boolean));
+  ["expert","user"].forEach(kd=>{const s=g.filter(d=>d.meta.kind===kd);if(s.length<2)return;
+   const dates=new Set(s.map(d=>d.meta.date.slice(0,4)));if(dates.size>1)add({file:s[0].file,type:"보고서 간 조사 연도 불일치",msg:`${[...dates].join(" / ")}`,basis:`${s.map(d=>d.file+"("+d.meta.date+")").join(", ")}`,page:1,sev:"낮음",cls:"확인 필요"});
+   const L=s.map(d=>d.meta.list||[]);if(kd==="expert"&&L.every(x=>x.length)){const A=new Set(L[0].map(x=>NS(x.name))),B=new Set(L[1].map(x=>NS(x.name)));const onlyA=[...A].filter(x=>!B.has(x)),onlyB=[...B].filter(x=>!A.has(x));if(onlyA.length||onlyB.length)add({file:s[1].file,type:"플랫폼 간 평가 페이지 구성 차이",msg:`${s[0].meta.plat} 전용: ${onlyA.slice(0,4).join(", ")||"-"} / ${s[1].meta.plat} 전용: ${onlyB.slice(0,4).join(", ")||"-"}`,basis:"플랫폼별로 평가 페이지가 다를 수 있어 오류로 단정하지 않음(차이만 표시)",page:2,sev:"낮음",cls:"확인 필요",conf:"낮음"});
+    if(L[0].length!==L[1].length)add({file:s[1].file,type:"플랫폼 간 평가 페이지 수 차이",msg:`${s[0].meta.plat} ${L[0].length}개 ↔ ${s[1].meta.plat} ${L[1].length}개`,basis:"구성 차이이며 오류 여부는 확인 필요",page:2,sev:"낮음",cls:"확인 필요",conf:"낮음"});
+    // 같은 이슈 복사
+    const a=s[0].meta.issues||[],b=s[1].meta.issues||[];let n=0;a.forEach(x=>b.forEach(y=>{if(x.pn===y.pn&&x.item===y.item&&sim(x.title+x.desc,y.title+y.desc)>=0.98&&x.desc.length>30)n++}));if(n>=Math.max(8,0.4*Math.min(a.length,b.length)))add({file:s[1].file,type:"플랫폼 간 이슈 내용 동일(복사 의심)",msg:`${s[0].meta.plat}·${s[1].meta.plat} 보고서에서 페이지·항목·설명이 98% 이상 같은 이슈 ${n}건`,basis:"같은 이슈가 두 플랫폼에서 실제로 발생했을 수 있어 확정하지 않음. 한 플랫폼 전용 용어가 있는지는 규칙 E가 별도로 검사",page:null,sev:"낮음",cls:"확인 필요",conf:"낮음"})}});
+  const cp=new Set(g.map(d=>d.meta.plat).filter(Boolean));if(g.length>1&&cp.size===1)add({file:g[0].file,type:"서비스 보고서 간 플랫폼 동일",msg:`${g.map(d=>d.file).join(" / ")} 모두 ${[...cp][0]}`,basis:"같은 서비스의 보고서가 모두 같은 플랫폼으로 표기됨(표지 오기 가능)",page:1,cls:"확인 필요"});
+  if(vers.size===1&&g.length>1&&false){}
+ });
+ return F}
+return{analyze,cross,DEF,ITEMS,sim}})();
+
+/* ===== PDF 품질 검수 (화면·저장·다운로드) ===== */
+const REV=["미검수","오류 확인","오류 아님","수정 완료","재검수 필요"],CLS=["확정 오류","오류 의심","확인 필요","분석 불가"],SEV=["높음","보통","낮음","확인 필요"];
+const QS={jobs:[],fnd:[],job:"all",f:{rule:"",sev:"",cls:"",st:"",q:"",pg:"",svc:"",type:""},pgn:0,tab:"res",docs:new Map(),files:new Map(),tpl:null,busy:"",v:null,scope:"all"};
+let QN=0;const qid=()=>Date.now()*1000+(QN++%1000);
+const RULES=[["A","동일 보고서 내 중복 이슈","구현","전문가: 같은 페이지·검사 항목 안의 이슈 제목·설명 유사도(3글자 조각 기준 80% 이상). 사용자: 같은 과업·장애유형 내 유사도. 서로 다른 화면·과업의 같은 문구는 97% 이상이면서 설명 80자 이상일 때만 '확인 필요'","이미지·화면 요소 비교는 하지 않음"],["B","공백·비정상 페이지","구현","텍스트·이미지 없음(렌더링 잉크 비율), 번호만 있음, 제목만 있음, 이슈 없는 오류 항목 페이지, 결과 항목 행 누락, 같은 텍스트의 중복 삽입 페이지, 페이지 읽기 실패","OCR 없음 — 스캔 PDF는 분석 불가로 표시"],["C","수행 결과 아이콘 누락","구현(부분)","사용자 보고서 과업 페이지의 결과 아이콘 3개가 렌더링 이미지에서 검출되는지 확인","노란 원형 아이콘 양식 전용(색상 기준). 다른 양식은 분석 불가"],["D","결과 문구-아이콘 불일치","구현(부분)","아이콘의 눈물(파랑)·표정선 픽셀 비율로 성공/미흡/실패를 판독해 문구와 비교","표정 판독은 이 양식의 3종 아이콘 전용"],["E","표지·메타데이터 불일치","구현","표지↔본문 플랫폼·서비스명·버전·평가 유형, 파일명↔표지, 날짜, 본문 다른 플랫폼 용어, 다른 서비스명 언급","법인명·조사 회차는 PDF에 없어 비교하지 않음"],["F","페이지 정보","구현","인쇄 페이지 번호(누락·중복·불일치), 목록↔결과 페이지↔오류 항목의 페이지명, 이슈 번호·항목명, 키워드 기반 이슈-항목 불일치(확인 필요)","목차 페이지는 양식에 없어 비교하지 않음"],["G","평가 경로","구현(부분)","경로 누락·빈 단계, 목록/과업 정보↔결과 페이지↔오류 항목 경로 비교, 다른 화면의 경로 의심","실제 서비스 화면과의 일치는 확인할 수 없어 확인 필요로 안내"],["H","X 표시 누락","구현(부분)","오류 항목 상세가 있는데 결과 표시가 X가 아니거나 비어 있음, X인데 상세 없음, 콘텐츠 없음/있음과 결과 모순, 성공인데 이슈 기재(사용자)","텍스트로 들어 있는 기호만 인식. 이미지·도형 기호, 다른 페이지와의 비교는 미지원"],["I","표·수치 불일치","구현","검사 항목별 표의 준수/총 페이지·항목 점수 산식, 요약표↔페이지별 결과, 사용자 요약표·비율↔과업 페이지","문서에 계산식이 명시된 경우만 산술 검증. 전문가 점수와 성공률은 합산하지 않음"],["J","페이지 순서·문서 구성","구현","결과 페이지·과업 번호의 연속성, 오류 항목 순서, 필수 섹션(설정에서 수정 가능)","보고서 유형은 전문가·사용자 2종 기본 제공"],["X","여러 PDF 교차 검수","구현(부분)","같은 서비스의 플랫폼 간 중복 업로드·동일 플랫폼 표기, 조사 연도, 평가 페이지 구성 차이, 이슈 복사 의심","이전 조사 보고서와의 비교는 미지원"]];
+const UNSUP=["OCR(스캔 PDF 글자 인식) — 서버 OCR 연동 필요","이전 조사 보고서와의 변경·추가·삭제 이슈 비교","실제 서비스 화면과의 평가 경로 일치 확인","이미지·도형으로 삽입된 X 표시의 이미지 기반 인식","화면 이미지 간 비교를 통한 중복 이슈 판단","신뢰도의 수치 산정(높음/보통/낮음/산정 불가 단계로만 표시)","보고서 양식 자동 추정(설정은 수동 입력)","PDF 형식의 검수 결과 다운로드(XLSX·CSV·요약 보고서 HTML 제공, 요약 보고서는 브라우저 인쇄로 PDF 저장 가능)","역할별 수정·삭제 권한 구분(현재는 @linkagelab.co.kr 로그인 사용자 전원 동일)"];
+const QRES=window.QA_RESULTS||{tests:[],cross:[]};
+// --- 저장
+function mkSync(table,rowFn){let snap=new Map();return{set(l){snap=new Map(l.map(x=>[x.id,JSON.stringify(x)]))},async push(l){const up=[],cur=new Set();l.forEach(x=>{cur.add(x.id);const js=JSON.stringify(x);if(snap.get(x.id)!==js)up.push([x,js])});const del=[...snap.keys()].filter(k=>!cur.has(k));
+ for(let i=0;i<up.length;i+=100){const ch=up.slice(i,i+100),{error}=await DB.from(table).upsert(ch.map(c=>rowFn(c[0])),{onConflict:"id"});if(error)throw error;ch.forEach(c=>snap.set(c[0].id,c[1]))}
+ for(let i=0;i<del.length;i+=200){const ch=del.slice(i,i+200),{error}=await DB.from(table).delete().in("id",ch);if(error)throw error;ch.forEach(k=>snap.delete(k))}}}}
+const SJ=mkSync("quality_review_jobs",j=>({id:j.id,file_name:j.file,status:j.status,data:j,updated_at:new Date().toISOString()})),SF=mkSync("quality_review_findings",f=>({id:f.id,job_id:f.job_id,data:f,updated_at:new Date().toISOString()}));
+let qT=null;function qsave(){clearTimeout(qT);qT=setTimeout(async()=>{if(!DB||!USER)return;try{await SJ.push(QS.jobs);await SF.push(QS.fnd);setBn("검수 저장됨 "+new Date().toLocaleTimeString("ko-KR"))}catch(e){setBn("검수 저장 실패",true);alert("검수 데이터 저장 실패: "+(e.code==="42501"?"권한이 없습니다.":(e.message||e)))}},300)}
+async function fetchAll(t,cols){let out=[],from=0;for(;;){const{data,error}=await DB.from(t).select(cols).order("id").range(from,from+999);if(error)throw error;out=out.concat(data);if(data.length<1000)break;from+=1000}return out}
+async function qLoad(){try{const j=await fetchAll("quality_review_jobs","id,data"),f=await fetchAll("quality_review_findings","id,job_id,data");
+ QS.jobs=j.map(r=>Object.assign(r.data,{id:+r.id}));QS.fnd=f.map(r=>Object.assign(r.data,{id:+r.id,job_id:+r.job_id}));SJ.set(QS.jobs);SF.set(QS.fnd);
+ QS.jobs.forEach(x=>{if(/중|\.\.\./.test(x.status)&&!QS.files.has(x.id)){x.status="실패";x.err=(x.err||[]).concat(["분석이 중단되었습니다(브라우저를 닫았을 수 있음). 다시 분석하세요."])}});
+ const{data:rl}=await DB.from("quality_review_rules").select("key,value");const t=(rl||[]).find(x=>x.key==="template");QS.tpl=t?t.value:null}catch(e){setBn("검수 데이터 불러오기 실패: "+(e.code==="42P01"?"테이블이 없습니다(schema.sql 재실행 필요)":e.message),true)}
+ if(/^#q/.test(location.hash))render()}
+const _load0=load;load=async function(){await _load0();if(USER)await qLoad()};
+// --- PDF 읽기
+const DEFT={blankInk:0.003,dupSim:0.9,req:{}};
+function qTpl(){const t=Object.assign({},DEFT,QS.tpl||{}),o={blankInk:+t.blankInk||0.003,dupSim:+t.dupSim||0.9};if(t.reqText){o.req={};["expert","user"].forEach(k=>{if(t.reqText[k]!=null)o.req[k]=t.reqText[k].split("\n").map(l=>l.trim()).filter(Boolean).map(l=>{const[n,r]=l.split("|");try{return[n.trim(),new RegExp((r||n).trim(),"m")]}catch(e){return[n.trim(),new RegExp(n.trim().replace(/[.*+?^${}()|[\]\\]/g,"\\$&"),"m")]}})})}return o}
+function iconScan(cv){const W=cv.width,H=cv.height,d=cv.getContext("2d",{willReadFrequently:true}).getImageData(0,0,W,H).data,x0=Math.floor(W*.7),Y=(r,g,b)=>r>235&&g>180&&g<235&&b<110,rows=[];
+ for(let y=0;y<H;y++){for(let x=x0;x<W;x++){const i=(y*W+x)*4;if(Y(d[i],d[i+1],d[i+2])){rows.push(y);break}}}
+ const bl=[];let s=null,p=null;rows.forEach(y=>{if(s===null)s=p=y;else if(y-p>4){bl.push([s,p]);s=p=y}else p=y});if(s!==null)bl.push([s,p]);const out=[];
+ bl.forEach(([a,b])=>{if(b-a<25||b-a>60)return;let xa=W,xb=0;for(let y=a;y<=b;y++)for(let x=x0;x<W;x++){const i=(y*W+x)*4;if(Y(d[i],d[i+1],d[i+2])){if(x<xa)xa=x;if(x>xb)xb=x}}
+  let blue=0,dark=0;for(let y=a;y<=b;y++)for(let x=xa;x<=xb;x++){const i=(y*W+x)*4,r=d[i],g=d[i+1],bb=d[i+2];if(bb>r+50&&bb>140)blue++;if(r<110&&g<110&&bb<110)dark++}
+  out.push(blue>=12?"f":dark>=75?"s":dark>=25?"m":null)});return out.length===3?out:null}
+async function qRead(doc,prog){const P=[],fails=[];
+ for(let i=1;i<=doc.numPages;i++){try{const pg=await doc.getPage(i),vp=pg.getViewport({scale:1}),H=vp.height,tc=await pg.getTextContent(),it=[];
+  tc.items.forEach(t=>{if(!t.str||!t.str.trim())return;const x=t.transform[4],base=H-t.transform[5],h=t.height||Math.abs(t.transform[3])||10,wd=t.width,len=t.str.length,re=/\S+/g;let m;while((m=re.exec(t.str)))it.push({t:m[0],x0:x+wd*m.index/len,x1:x+wd*(m.index+m[0].length)/len,b:base,h})});
+  it.sort((a,b)=>a.b-b.b||a.x0-b.x0);const L=[];it.forEach(w=>{const l=L[L.length-1];if(l&&Math.abs(l.b-w.b)<3)l.w.push(w);else L.push({b:w.b,w:[w]})});
+  const lines=L.map(l=>{l.w.sort((a,b)=>a.x0-b.x0);const h=Math.max(...l.w.map(x=>x.h));return{t:l.w.map(x=>x.t).join(" "),x0:l.w[0].x0,x1:Math.max(...l.w.map(x=>x.x1)),y:l.b-h,h,w:l.w.map(x=>({t:x.t,x0:x.x0,x1:x.x1}))}});
+  const v2=pg.getViewport({scale:0.4}),cv=document.createElement("canvas");cv.width=Math.ceil(v2.width);cv.height=Math.ceil(v2.height);const cx=cv.getContext("2d",{willReadFrequently:true});cx.fillStyle="#fff";cx.fillRect(0,0,cv.width,cv.height);await pg.render({canvasContext:cx,viewport:v2}).promise;
+  const d=cx.getImageData(0,0,cv.width,cv.height).data;let nz=0;for(let k=0;k<d.length;k+=4)if(d[k]<245||d[k+1]<245||d[k+2]<245)nz++;
+  const text=lines.map(l=>l.t).join("\n");let icons;if(/^과업\s*\d+\s*[:：]/m.test(text)&&/수행 결과/.test(text)){const v3=pg.getViewport({scale:1.5}),c3=document.createElement("canvas");c3.width=Math.ceil(v3.width);c3.height=Math.ceil(v3.height);const x3=c3.getContext("2d",{willReadFrequently:true});x3.fillStyle="#fff";x3.fillRect(0,0,c3.width,c3.height);await pg.render({canvasContext:x3,viewport:v3}).promise;icons=iconScan(c3)}
+  P.push({n:i,w:vp.width,h:H,lines,text,ink:nz/(d.length/4),icons})}catch(e){fails.push(i+"쪽: "+(e.message||e));P.push({n:i,w:595,h:842,lines:[],text:"",ink:1,failed:true})}
+  prog&&prog(i,doc.numPages)}return{P,fails}}
+function slim(m){const o=Object.assign({},m);delete o.issuesE;o.list=(m.list||[]).map(x=>({n:x.n,name:x.name,path:x.path,page:x.page}));return o}
+function mkF(job,x){return Object.assign({},x,{id:qid(),job_id:job.id,file:job.file,review:"미검수",memo:"",hist:[],svc:job.meta?job.meta.svc:"",plat:job.meta?job.meta.plat:""})}
+function qMerge(job,found,old){const o=new Map(old.map(f=>[f.fp,f]));return found.map(x=>{const f=mkF(job,x),p=o.get(f.fp);if(p){f.id=p.id;f.review=p.review;f.memo=p.memo;f.hist=p.hist}return f})}
+async function qDoc(jid){if(QS.docs.has(jid))return QS.docs.get(jid);const job=QS.jobs.find(j=>j.id===jid);let buf;if(QS.files.has(jid))buf=await QS.files.get(jid).arrayBuffer();else{if(!job||!job.path)throw new Error("원본 PDF가 저장되어 있지 않습니다.");const{data,error}=await DB.storage.from("report-pdfs").download(job.path);if(error)throw error;buf=await data.arrayBuffer()}
+ const doc=await pdfjsLib.getDocument({data:buf}).promise;QS.docs.set(jid,doc);return doc}
+async function qAnalyzeJob(job,doc){job.status="분석 중";job.prog=0;qr();const{P,fails}=await qRead(doc,(i,n)=>{job.prog=i;job.pages=n;job.status=`분석 중 (${i}/${n}쪽)`;if(i%5===0)qr()});
+ if(P.every(p=>!p.lines.length&&!p.failed)&&P.reduce((a,p)=>a+p.ink,0)/P.length>0.01)throw new Error("텍스트 레이어가 없는 스캔 PDF로 보입니다. OCR은 서버 연동이 필요해 이 시스템에서는 분석 불가입니다.");
+ const res=QA.analyze(P,Object.assign({file:job.file,services:[...new Set(R.map(r=>r.svc).filter(Boolean))]},{tpl:qTpl()}));job.meta=slim(res.meta);job.pages=P.length;job.err=(job.err||[]).filter(e=>!/쪽:/.test(e)).concat(fails);
+ const old=QS.fnd.filter(f=>f.job_id===job.id&&f.rule!=="X");QS.fnd=QS.fnd.filter(f=>f.job_id!==job.id||f.rule==="X").concat(qMerge(job,res.findings,old));job.status=fails.length?"일부 페이지 분석 실패":"분석 완료";job.done=stamp()}
+async function qRun(fs){const msg=[];for(const f of fs){if(!/\.pdf$/i.test(f.name)||(f.type&&f.type!=="application/pdf")){msg.push(f.name+": PDF 파일만 가능합니다.");continue}if(f.size>30*1048576){msg.push(f.name+": 30MB를 넘습니다.");continue}if(f.size<1000){msg.push(f.name+": 파일이 너무 작습니다.");continue}
+ const sig=f.name+"|"+f.size;if(QS.jobs.some(j=>j.sig===sig)){msg.push(f.name+": 이미 분석한 파일입니다. 목록의 '다시 분석'을 사용하세요.");continue}
+ const job={id:qid(),file:f.name,size:f.size,sig,status:"업로드 중",pages:0,prog:0,err:[],meta:null,created:stamp(),by:USER,path:""};QS.jobs.push(job);QS.files.set(job.id,f);QS.job=String(job.id);qr();
+ try{const{error}=await DB.storage.from("report-pdfs").upload(job.id+".pdf",f,{contentType:"application/pdf",upsert:true});if(error)job.err.push("원본 저장 실패(분석은 계속): "+error.message);else job.path=job.id+".pdf";
+  const doc=await qDoc(job.id);await qAnalyzeJob(job,doc)}catch(e){job.status="실패";job.err.push(String(e.message||e))}qr();qsave()}
+ if(QS.jobs.filter(j=>j.meta).length>1)qCross();qr();qsave();if(msg.length)alert(msg.join("\n"))}
+function qCross(){const ok=QS.jobs.filter(j=>j.meta),res=QA.cross(ok.map(j=>({file:j.file,meta:j.meta}))),old=new Map(QS.fnd.filter(f=>f.rule==="X").map(f=>[f.fp,f]));QS.fnd=QS.fnd.filter(f=>f.rule!=="X");
+ res.forEach(x=>{const j=ok.find(j=>j.file===x.file)||ok[0],f=mkF(j,x);f.fp=["X",f.type,f.msg].join("|");f.rel="";const p=old.get(f.fp);if(p){f.id=p.id;f.review=p.review;f.memo=p.memo;f.hist=p.hist}QS.fnd.push(f)})}
+async function qRerun(jid){const job=QS.jobs.find(j=>j.id===jid);try{job.status="분석 중";qr();const doc=await qDoc(jid);await qAnalyzeJob(job,doc);if(QS.jobs.filter(j=>j.meta).length>1)qCross()}catch(e){job.status="실패";job.err.push(String(e.message||e))}qr();qsave()}
+function qDelJob(jid){const job=QS.jobs.find(j=>j.id===jid);QS.jobs=QS.jobs.filter(j=>j.id!==jid);QS.fnd=QS.fnd.filter(f=>f.job_id!==jid);QS.docs.delete(jid);QS.files.delete(jid);if(job&&job.path&&DB)DB.storage.from("report-pdfs").remove([job.path]);if(QS.job===String(jid))QS.job="all";if(QS.jobs.filter(j=>j.meta).length>1)qCross();qr();qsave()}
+function qr(){if(/^#q/.test(location.hash||"")&&!document.querySelector("#md .modal")&&!window.LOCK)render()}
+function qSet(fid,st,memo){const f=QS.fnd.find(x=>x.id===fid);if(!f)return;const m=(memo||"").trim();f.hist.push({t:stamp(),by:USER,from:f.review,to:st,memo:m});f.review=st;if(m)f.memo=m;qsave()}
+// --- 집계/필터
+const cnt=l=>({all:l.length,c1:l.filter(f=>f.cls==="확정 오류").length,c2:l.filter(f=>f.cls==="오류 의심").length,c3:l.filter(f=>f.cls==="확인 필요").length,c4:l.filter(f=>f.cls==="분석 불가").length,done:l.filter(f=>["오류 확인","오류 아님","수정 완료"].includes(f.review)).length});
+const qJobF=()=>QS.fnd.filter(f=>QS.job==="all"||String(f.job_id)===QS.job);
+function qFilt(){const q=QS.f.q.toLowerCase();return qJobF().filter(f=>(!QS.f.rule||f.rule===QS.f.rule)&&(!QS.f.type||f.type===QS.f.type)&&(!QS.f.sev||f.sev===QS.f.sev)&&(!QS.f.cls||f.cls===QS.f.cls)&&(!QS.f.st||f.review===QS.f.st)&&(!QS.f.pg||String(f.page)===QS.f.pg)&&(!QS.f.svc||(f.svc+" "+f.plat)===QS.f.svc)&&(!q||[f.type,f.msg,f.basis,f.ref,f.file,f.memo].join(" ").toLowerCase().includes(q)))}
+const CO={"확정 오류":"background:#fadbd8;color:#c0392b","오류 의심":"background:#fdf0d5;color:#b86e00","확인 필요":"background:#e8edf5;color:#1c2a3e","분석 불가":"background:#ece6f7;color:#5b3fa0"};
+const tg=(t,st)=>`<span class="tag" style="${st||""}">${esc(t)}</span>`;
+function jobRow(j){const c=cnt(QS.fnd.filter(f=>f.job_id===j.id)),sel=QS.job===String(j.id),busy=/중/.test(j.status),pct=j.pages?Math.round((j.prog||0)/j.pages*100):0;
+ return`<tr class="r" data-job="${j.id}" style="${sel?"background:#fff8d6":""}"><td class="l">${esc(j.file)}</td><td>${j.pages||"-"}</td><td>${tg(j.status,/실패/.test(j.status)?CO["확정 오류"]:/완료/.test(j.status)?"background:#dcf3e6;color:#1a7f4b":"")}${busy?` ${pct}%`:""}</td><td>${j.meta?esc((j.meta.svc||"-")+" "+(j.meta.plat||"")+" "+(j.meta.kind==="user"?"사용자":j.meta.kind==="expert"?"전문가":"")):"-"}</td><td>${c.all}</td><td>${j.err&&j.err.length?`<span class="iss" title="${esc(j.err.join("\n"))}">오류 ${j.err.length}</span>`:""}</td><td><button data-rr="${j.id}" ${busy?"disabled":""}>${/실패/.test(j.status)?"재시도":"다시 분석"}</button> <button class="d" data-dj="${j.id}">삭제</button></td></tr>`}
+views.qa=function(){if(!DB||!USER)return'<h2>PDF 품질 검수</h2><div class="note">로그인 후 사용할 수 있습니다.</div>';
+ const tab=QS.tab,tb=`<div class="tools"><button class="${tab==="res"?"p":""}" data-qt="res">검수 결과</button><button class="${tab==="rules"?"p":""}" data-qt="rules">규칙 현황·테스트 결과</button><button class="${tab==="tpl"?"p":""}" data-qt="tpl">보고서 유형 기준 설정</button></div>`;
+ if(tab==="rules")return`<h2>PDF 품질 검수</h2>${tb}${qRules()}`;if(tab==="tpl")return`<h2>PDF 품질 검수</h2>${tb}${qTplView()}`;
+ const sel=QS.job==="all"?null:QS.jobs.find(j=>String(j.id)===QS.job),list=qJobF(),c=cnt(list),F=qFilt(),PGS=30,np=Math.max(1,Math.ceil(F.length/PGS));QS.pgn=Math.min(QS.pgn,np-1);
+ const ty=[...new Set(list.map(f=>f.type))].sort(),sv=[...new Set(list.map(f=>(f.svc+" "+f.plat).trim()).filter(Boolean))],pgs=[...new Set(list.map(f=>f.page).filter(Boolean))].sort((a,b)=>a-b);
+ const o=(k,l,v)=>`<select data-qf="${k}"><option value="">${l} 전체</option>${v.map(x=>`<option ${String(QS.f[k])===String(x)?"selected":""}>${esc(x)}</option>`).join("")}</select>`;
+ const card=(a,b)=>`<div class="card"><b style="font-size:${String(a).length>8?"14px":"24px"}">${esc(a)}</b><span>${b}</span></div>`;
+ return`<h2>PDF 품질 검수</h2>${tb}<div class="note">PDF에서 사람이 확인해야 할 <b>오류 후보</b>를 찾아 줍니다. 자동 분석으로 판단할 수 없는 항목은 정상으로 보지 않고 '확인 필요' 또는 '분석 불가'로 표시합니다. 원본 PDF는 수정하지 않습니다. OCR·이미지 기호 인식 등 미지원 항목은 '규칙 현황' 탭에서 확인하세요.</div>
+<div class="drop" id="qdz" style="padding:18px">검수할 PDF를 끌어다 놓거나 선택하세요 (여러 개 가능, 파일당 30MB 이하)<br><br><input type="file" id="qf" accept="application/pdf,.pdf" multiple></div>
+<div class="panel" style="margin-top:12px"><h3>업로드·분석 현황 <span class="hint">(행을 누르면 해당 파일만 보기, 한 번 더 누르면 전체)</span></h3><div class="tw"><table><tr><th>파일명</th><th>쪽수</th><th>분석 상태</th><th>보고서</th><th>탐지</th><th>오류</th><th></th></tr>${QS.jobs.map(jobRow).join("")||'<tr><td colspan="7">업로드한 파일이 없습니다.</td></tr>'}</table></div>${sel&&sel.meta?`<details style="margin-top:8px"><summary>페이지 분류 보기</summary><div class="hint">${sel.meta.pageTypes.map((t,i)=>`${i+1}쪽 ${esc(t)}`).join(" · ")}</div></details>`:""}</div>
+<div class="cards">${card(sel?sel.file:"전체 "+QS.jobs.length+"개 파일","업로드 파일명")}${card(sel?(sel.pages||"-"):QS.jobs.reduce((a,j)=>a+(j.pages||0),0),"전체 페이지 수")}${card(sel?sel.status:(QS.jobs.every(j=>/완료|실패/.test(j.status))?"분석 완료":"분석 중"),"분석 완료 여부")}${card(c.all,"탐지된 전체 항목")}${card(c.c1,"확정 오류")}${card(c.c2,"오류 의심")}${card(c.c3,"확인 필요")}${card(c.c4,"분석 불가")}${card(c.done,"검수 완료(확인·오류 아님·수정 완료)")}</div>
+<div class="tools"><input id="qq" placeholder="키워드 검색" value="${esc(QS.f.q)}">${o("rule","규칙",["A","B","C","D","E","F","G","H","I","J","X"])}${o("type","오류 유형",ty)}${o("sev","심각도",SEV)}${o("cls","분류",CLS)}${o("st","검수 상태",REV)}${o("pg","PDF쪽",pgs)}${o("svc","서비스·플랫폼",sv)}<button id="qfr">필터 초기화</button></div>
+<div class="tools"><b>다운로드</b><select id="qsc">${[["all","전체"],["flt","현재 필터"],["확정 오류","확정 오류"],["미검수","미검수"],["확인 필요","확인 필요"],["수정 완료","수정 완료"]].map(x=>`<option value="${x[0]}" ${QS.scope===x[0]?"selected":""}>${x[1]}</option>`).join("")}</select><button data-qd="xlsx">XLSX</button><button data-qd="csv">CSV</button><button data-qd="html">검수 요약 보고서</button><span class="hint">PDF 형식은 미지원(요약 보고서를 열어 인쇄 → PDF로 저장)</span></div>
+<div class="tw"><table><tr><th>규칙</th><th>오류 유형</th><th>심각도</th><th>분류</th><th>PDF쪽</th><th>인쇄쪽</th><th>서비스·플랫폼</th><th>관련 이슈·과업</th><th>탐지 내용</th><th>탐지 근거</th><th>신뢰도</th><th>검수 상태</th></tr>${F.slice(QS.pgn*PGS,QS.pgn*PGS+PGS).map(f=>`<tr class="r" data-fid="${f.id}"><td>${f.rule}</td><td class="l">${esc(f.type)}</td><td>${esc(f.sev)}</td><td>${tg(f.cls,CO[f.cls])}</td><td>${f.page||"-"}</td><td>${f.printed??"-"}</td><td class="l">${esc((f.svc+" "+f.plat).trim())}</td><td class="l">${esc(f.ref)}</td><td class="l" style="white-space:normal;min-width:260px">${esc(f.msg)}</td><td class="l" style="white-space:normal;min-width:220px">${esc(f.basis)}</td><td>${esc(f.conf)}</td><td>${tg(f.review,f.review==="미검수"?"":f.review==="오류 아님"?"background:#e8edf5":"background:#dcf3e6;color:#1a7f4b")}</td></tr>`).join("")||'<tr><td colspan="12">탐지된 항목이 없습니다.</td></tr>'}</table></div>
+<div class="tools" style="margin-top:8px"><button id="qpv">이전</button>${QS.pgn+1} / ${np} (총 ${F.length}건)<button id="qnx">다음</button></div>`};
+function qRules(){const T=QRES.tests||[],by=r=>T.filter(t=>t.rule.split("|")[0]===r||t.rule.includes(r));
+ return`<div class="note"><b>자체 테스트 결과</b>: 개발 중 샘플 보고서 4개(카카오내비 전문가·사용자 iOS/Android)와, 여기에 오류를 일부러 넣은 변형 파일로 실행한 결과입니다. 텍스트 수정이 필요한 오류(표지·경로·표시·수치)는 PDF 글꼴을 직접 고칠 수 없어 <b>추출된 텍스트를 수정</b>해 시험했고, 페이지 삽입·삭제·교체·순서 변경·아이콘 가림·아이콘 교체는 <b>실제로 변형한 PDF 파일</b>로 시험했습니다. 원본 4개에서는 오류 의심이 전문가 보고서에 각 5건(실제 보고서의 불일치 1건 포함, 나머지는 확인 필요 항목), 사용자 보고서에는 0건 나왔습니다. PDF.js로 글자를 읽어 줄로 묶는 코드와 아이콘 판독 함수는 같은 코드를 별도 환경에서 실제 PDF 4개로 실행해 같은 결과(사용자 0건, 전문가 각 5건)를 확인했습니다. 다만 실제 브라우저 화면(캔버스 렌더링, 원본 비교 화면, 로그인·DB 저장)은 직접 실행해 보지 못했습니다.</div>
+<div class="tw"><table><tr><th>규칙</th><th>이름</th><th>구현 상태</th><th>검사하는 내용</th><th>한계</th><th>테스트</th></tr>${RULES.map(r=>{const t=by(r[0]);return`<tr><td>${r[0]}</td><td class="l">${esc(r[1])}</td><td>${tg(r[2],r[2]==="구현"?"background:#dcf3e6;color:#1a7f4b":"background:#fdf0d5;color:#b86e00")}</td><td class="l" style="white-space:normal;min-width:320px">${esc(r[3])}</td><td class="l" style="white-space:normal;min-width:220px">${esc(r[4])}</td><td style="white-space:normal">${t.length?`${t.filter(x=>x.pass).length}/${t.length} 통과`:r[0]==="X"?`${(QRES.cross||[]).filter(x=>x[2]).length}/${(QRES.cross||[]).length} 통과`:"-"}</td></tr>`}).join("")}</table></div>
+<h3 style="margin-top:16px">테스트 상세</h3><div class="tw"><table><tr><th>번호</th><th>규칙</th><th>방식</th><th>시험 내용</th><th>결과</th><th>탐지된 내용</th></tr>${T.map(t=>`<tr><td>${t.id}</td><td>${t.rule}</td><td>${t.real?"변형 PDF":"추출 텍스트 수정"}</td><td class="l" style="white-space:normal">${esc(t.desc)}</td><td>${t.pass?tg("통과","background:#dcf3e6;color:#1a7f4b"):tg("실패",CO["확정 오류"])}</td><td class="l" style="white-space:normal">${esc(t.hit)}</td></tr>`).join("")}${(QRES.cross||[]).map(x=>`<tr><td>${x[0]}</td><td>X</td><td>여러 PDF</td><td class="l" style="white-space:normal">${esc(x[1])}</td><td>${x[2]?tg("통과","background:#dcf3e6;color:#1a7f4b"):tg("실패",CO["확정 오류"])}</td><td class="l" style="white-space:normal">${esc(x[3])}</td></tr>`).join("")}</table></div>
+<h3 style="margin-top:16px">아직 지원하지 않는 기능</h3><div class="panel">${UNSUP.map(x=>`<div class="wrn" style="color:#6b7a90">• ${esc(x)}</div>`).join("")}</div>`}
+function qTplView(){const t=Object.assign({},DEFT,QS.tpl||{}),rt=t.reqText||{expert:QA.DEF.req.expert.map(x=>x[0]+"|"+x[1].source).join("\n"),user:QA.DEF.req.user.map(x=>x[0]+"|"+x[1].source).join("\n")};
+ return`<div class="note">보고서 유형별 기준입니다. 저장하면 이후 분석(또는 '다시 분석')부터 적용되고, 같은 유형의 모든 보고서에 재사용됩니다. 기준이 모호하면 자동으로 오류를 확정하지 않고 '오류 의심/확인 필요'로 표시합니다. <b>X 표시의 의미</b>는 설정값이 아니라 보고서의 '검사 항목별 상세 결과' 표 집계(준수 페이지 수 = O 개수)로 매번 검증합니다.</div>
+<div class="panel"><h3>공통 기준</h3><div class="tools">공백 페이지 판정 잉크 비율 <input id="tb" type="number" step="0.001" value="${t.blankInk}" style="width:90px"> 유사 이슈 판정 유사도 <input id="td" type="number" step="0.01" value="${t.dupSim}" style="width:90px"></div></div>
+<div class="grid"><div class="panel"><h3>전문가 보고서 필수 섹션</h3><div class="hint">한 줄에 '이름|정규식'</div><textarea id="te" rows="9" style="width:100%">${esc(rt.expert)}</textarea></div><div class="panel"><h3>사용자 보고서 필수 섹션</h3><div class="hint">한 줄에 '이름|정규식'</div><textarea id="tu" rows="9" style="width:100%">${esc(rt.user)}</textarea></div></div>
+<button class="p" id="tsv">기준 저장</button> <button id="trs">기본값으로 되돌리기</button>`}
+views.qh=function(){if(!DB||!USER)return'<h2>검수 이력</h2><div class="note">로그인 후 사용할 수 있습니다.</div>';const H=[];QS.fnd.forEach(f=>f.hist.forEach(h=>H.push(Object.assign({f},h))));H.sort((a,b)=>String(b.t).localeCompare(String(a.t)));
+ return`<h2>검수 이력</h2><div class="note">검수 상태를 바꿀 때마다 검수자·일시·이전 상태·변경 상태·메모가 저장됩니다.</div><div class="tw"><table><tr><th>일시</th><th>검수자</th><th>파일</th><th>오류 유형</th><th>페이지</th><th>이전 상태</th><th>변경 상태</th><th>메모</th></tr>${H.slice(0,300).map(h=>`<tr class="r" data-fid="${h.f.id}"><td>${esc(h.t)}</td><td>${esc(h.by)}</td><td class="l">${esc(h.f.file)}</td><td class="l">${esc(h.f.type)}</td><td>${h.f.page||"-"}</td><td>${esc(h.from)}</td><td>${esc(h.to)}</td><td class="l" style="white-space:normal">${esc(h.memo)}</td></tr>`).join("")||'<tr><td colspan="8">이력이 없습니다.</td></tr>'}</table></div>`};
+// --- 상세(원본 비교)
+async function qOpen(fid,page){const f=QS.fnd.find(x=>x.id===fid);if(!f)return;const job=QS.jobs.find(j=>j.id===f.job_id);QS.v={fid,page:page||(f.box&&f.box.p)||f.page||1,zoom:QS.v&&QS.v.fid===fid?QS.v.zoom:1.1};
+ const sim=QS.fnd.filter(x=>x.id!==f.id&&x.rule===f.rule&&x.type===f.type&&x.review==="오류 아님");
+ $("#md").innerHTML=`<div class="modal"><div class="mb" style="width:min(1320px,100%)"><div class="tools"><b>${f.rule} · ${esc(f.type)}</b> ${tg(f.cls,CO[f.cls])} <span class="hint">${esc(f.file)}</span><span style="flex:1"></span><button id="qx">닫기</button></div>
+ <div style="display:grid;grid-template-columns:minmax(0,1.25fr) minmax(320px,1fr);gap:14px"><div><div class="tools"><button id="qz0">−</button><button id="qz1">＋</button><button id="qp0">◀</button><span id="qpn"></span><button id="qp1">▶</button>${f.rel?String(f.rel).split(",").filter(Boolean).slice(0,4).map(p=>`<button data-go="${p}">관련 ${p}쪽</button>`).join(""):""}${f.box&&f.box.p?`<button data-go="${f.box.p}">문제 위치 ${f.box.p}쪽</button>`:""}</div><div id="qv" style="overflow:auto;max-height:78vh;border:1px solid var(--line);background:#f4f6fa"><div class="hint" style="padding:20px">원본을 불러오는 중…</div></div></div>
+ <div style="max-height:84vh;overflow:auto"><table class="sh" style="font-size:12px">${[["심각도",f.sev],["신뢰도",f.conf],["PDF 실제 쪽",f.page||"-"],["인쇄 페이지",f.printed??"-"],["서비스·플랫폼",(f.svc+" "+f.plat).trim()],["관련 이슈·과업",f.ref||"-"],["탐지 내용",f.msg],["탐지 근거",f.basis]].map(r=>`<tr><th style="width:90px">${r[0]}</th><td class="l" style="white-space:normal;text-align:left">${esc(r[1])}</td></tr>`).join("")}</table>
+ <div class="panel" style="margin-top:10px"><h3>검수</h3><div class="tools">현재: ${tg(f.review)}${[["오류 확인","오류 확인"],["오류 아님","오류 아님"],["수정 완료","수정 완료"],["재검수 필요","재검수 요청"],["미검수","미검수로 되돌리기"]].map(x=>`<button data-st="${x[0]}">${x[1]}</button>`).join("")}</div><textarea id="qm" rows="3" style="width:100%" placeholder="메모(상태 변경 시 함께 저장)">${esc(f.memo||"")}</textarea><div class="hint">${sim.length?`같은 유형에서 '오류 아님'으로 처리한 사례 ${sim.length}건이 있습니다(참고용 — 자동으로 오류 아님 처리하지 않습니다).`:""}</div></div>
+ <details open><summary>이 페이지에서 추출한 텍스트</summary><pre id="qtx" style="white-space:pre-wrap;font-size:11px;background:#f4f6fa;padding:8px;border-radius:6px"></pre></details><details><summary>상태 변경 이력 (${f.hist.length})</summary>${f.hist.map(h=>`<div class="hint">${esc(h.t)} · ${esc(h.by)} · ${esc(h.from)} → ${esc(h.to)} ${esc(h.memo)}</div>`).join("")}</details></div></div></div></div>`;
+ $("#qx").onclick=()=>{$("#md").innerHTML="";render()};document.querySelectorAll("[data-st]").forEach(b=>b.onclick=()=>{qSet(fid,b.dataset.st,$("#qm").value);qOpen(fid,QS.v.page)});
+ document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{QS.v.page=+b.dataset.go;qDraw(f,job)});$("#qz0").onclick=()=>{QS.v.zoom=Math.max(.5,QS.v.zoom-.2);qDraw(f,job)};$("#qz1").onclick=()=>{QS.v.zoom=Math.min(3,QS.v.zoom+.2);qDraw(f,job)};
+ $("#qp0").onclick=()=>{QS.v.page=Math.max(1,QS.v.page-1);qDraw(f,job)};$("#qp1").onclick=()=>{QS.v.page=Math.min(job.pages||999,QS.v.page+1);qDraw(f,job)};qDraw(f,job)}
+async function qDraw(f,job){const v=QS.v,box=$("#qv");if(!box)return;$("#qpn").textContent=`${v.page} / ${job.pages||"?"}쪽`;
+ try{const doc=await qDoc(job.id),pg=await doc.getPage(v.page),vp=pg.getViewport({scale:v.zoom}),cv=document.createElement("canvas");cv.width=vp.width;cv.height=vp.height;const cx=cv.getContext("2d");await pg.render({canvasContext:cx,viewport:vp}).promise;
+  const bs=[f.box].filter(b=>b&&b.p===v.page);bs.forEach(b=>{cx.fillStyle="rgba(255,214,0,.35)";cx.strokeStyle="#e0a800";cx.lineWidth=2;const s=v.zoom;cx.fillRect((b.x-3)*s,(b.y-2)*s,(b.w+6)*s,(b.h+4)*s);cx.strokeRect((b.x-3)*s,(b.y-2)*s,(b.w+6)*s,(b.h+4)*s)});box.innerHTML="";box.appendChild(cv);
+  const P=await pg.getTextContent(),hh=pg.getViewport({scale:1}).height;const rows=[];P.items.forEach(t=>{if(t.str.trim())rows.push([hh-t.transform[5],t.transform[4],t.str])});rows.sort((a,b)=>Math.round(a[0]/3)-Math.round(b[0]/3)||a[1]-b[1]);let last=null,out=[];rows.forEach(r=>{if(last!==null&&Math.abs(r[0]-last)<3)out[out.length-1]+=" "+r[2];else out.push(r[2]);last=r[0]});$("#qtx").textContent=out.join("\n")}
+ catch(e){box.innerHTML=`<div class="iss" style="padding:20px">원본 PDF를 표시하지 못했습니다: ${esc(e.message||e)}<br>원본이 저장되어 있지 않거나 권한이 없을 수 있습니다. 이 경우 위의 추출 정보로 확인하세요.</div>`}}
+// --- 다운로드
+function qRows(list){return list.map(f=>({"파일명":f.file,"규칙":f.rule,"오류 유형":f.type,"심각도":f.sev,"분류":f.cls,"PDF 실제 페이지":f.page||"","인쇄 페이지":f.printed??"","서비스명":f.svc,"플랫폼명":f.plat,"관련 이슈·과업":f.ref,"탐지 내용":f.msg,"판단 근거":f.basis,"신뢰도":f.conf,"검수 상태":f.review,"검수자 메모":f.memo||""}))}
+function qScope(){const s=QS.scope,l=qJobF();return s==="all"?l:s==="flt"?qFilt():s==="확정 오류"?l.filter(f=>f.cls==="확정 오류"):s==="확인 필요"?l.filter(f=>f.cls==="확인 필요"):s==="미검수"?l.filter(f=>f.review==="미검수"):l.filter(f=>f.review===s)}
+function qDown(k){const l=qScope(),rows=qRows(l);if(!rows.length){alert("내려받을 항목이 없습니다.");return}
+ if(k==="csv")return dl(new Blob(["\ufeff"+XLSX.utils.sheet_to_csv(XLSX.utils.json_to_sheet(rows))],{type:"text/csv"}),"PDF품질검수결과.csv");
+ if(k==="xlsx"){const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),"검수 결과");const c=cnt(l);XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet([{"전체":c.all,"확정 오류":c.c1,"오류 의심":c.c2,"확인 필요":c.c3,"분석 불가":c.c4,"검수 완료":c.done}]),"요약");return dl(new Blob([XLSX.write(wb,{type:"array",bookType:"xlsx"})]),"PDF품질검수결과.xlsx")}
+ const c=cnt(l),by={};l.forEach(f=>{by[f.type]=(by[f.type]||0)+1});const top=l.filter(f=>f.cls==="확정 오류"||f.cls==="오류 의심");
+ const h=`<!doctype html><meta charset="utf-8"><title>PDF 품질 검수 요약</title><style>body{font:14px sans-serif;max-width:960px;margin:24px auto}table{border-collapse:collapse;width:100%}td,th{border:1px solid #ccc;padding:5px 8px;text-align:left;font-size:12px}th{background:#fde047}</style><h1>PDF 품질 검수 요약 보고서</h1><p>생성: ${esc(stamp())} · 검수자: ${esc(USER)} · 대상 파일: ${[...new Set(l.map(f=>f.file))].map(esc).join(", ")}</p><p>전체 ${c.all}건 — 확정 오류 ${c.c1}, 오류 의심 ${c.c2}, 확인 필요 ${c.c3}, 분석 불가 ${c.c4}, 검수 완료 ${c.done}</p><h2>오류 유형별 건수</h2><table><tr><th>유형</th><th>건수</th></tr>${Object.entries(by).sort((a,b)=>b[1]-a[1]).map(e=>`<tr><td>${esc(e[0])}</td><td>${e[1]}</td></tr>`).join("")}</table><h2>확정 오류·오류 의심 목록</h2><table><tr><th>파일</th><th>쪽(인쇄)</th><th>유형</th><th>분류</th><th>내용</th><th>근거</th><th>신뢰도</th><th>검수 상태·메모</th></tr>${top.map(f=>`<tr><td>${esc(f.file)}</td><td>${f.page||"-"}(${f.printed??"-"})</td><td>${esc(f.type)}</td><td>${esc(f.cls)}</td><td>${esc(f.msg)}</td><td>${esc(f.basis)}</td><td>${esc(f.conf)}</td><td>${esc(f.review)} ${esc(f.memo||"")}</td></tr>`).join("")}</table><p>※ 자동 탐지 결과는 오류 후보입니다. 확인 필요·분석 불가 항목은 정상으로 간주하지 않았습니다.</p>`;
+ dl(new Blob([h],{type:"text/html"}),"PDF품질검수요약보고서.html")}
+// --- 이벤트
+const _bind=bind;bind=function(k){_bind(k);const m=$("#m");
+ if(k==="qa"){m.querySelectorAll("[data-qt]").forEach(b=>b.onclick=()=>{QS.tab=b.dataset.qt;render()});if(QS.tab==="tpl"){$("#tsv").onclick=async()=>{const t={blankInk:+$("#tb").value||0.003,dupSim:+$("#td").value||0.9,reqText:{expert:$("#te").value,user:$("#tu").value}};const{error}=await DB.from("quality_review_rules").upsert({key:"template",value:t,updated_at:new Date().toISOString()});if(error)alert("저장 실패: "+error.message);else{QS.tpl=t;alert("기준을 저장했습니다. '다시 분석'부터 적용됩니다.")}};$("#trs").onclick=async()=>{await DB.from("quality_review_rules").delete().eq("key","template");QS.tpl=null;render()};return}
+  if(QS.tab!=="res")return;const f=$("#qf"),dz=$("#qdz");f.onchange=()=>{const a=[...f.files];f.value="";qRun(a)};dz.ondragover=e=>e.preventDefault();dz.ondrop=e=>{e.preventDefault();qRun([...e.dataTransfer.files])};
+  m.querySelectorAll("[data-job]").forEach(r=>r.onclick=e=>{if(e.target.tagName==="BUTTON")return;QS.job=QS.job===r.dataset.job?"all":r.dataset.job;QS.pgn=0;render()});m.querySelectorAll("[data-rr]").forEach(b=>b.onclick=()=>qRerun(+b.dataset.rr));m.querySelectorAll("[data-dj]").forEach(b=>b.onclick=()=>{if(b.dataset.c!=="1"){b.dataset.c="1";b.textContent="한 번 더 클릭하면 삭제";return}qDelJob(+b.dataset.dj)});
+  m.querySelectorAll("[data-qf]").forEach(s=>s.onchange=()=>{QS.f[s.dataset.qf]=s.value;QS.pgn=0;render()});$("#qq").oninput=e=>{QS.f.q=e.target.value;QS.pgn=0;const p=e.target.selectionStart;render();const q=$("#qq");q.focus();q.setSelectionRange(p,p)};$("#qfr").onclick=()=>{QS.f={rule:"",sev:"",cls:"",st:"",q:"",pg:"",svc:"",type:""};QS.pgn=0;render()};
+  $("#qsc").onchange=e=>{QS.scope=e.target.value};m.querySelectorAll("[data-qd]").forEach(b=>b.onclick=()=>qDown(b.dataset.qd));$("#qpv").onclick=()=>{QS.pgn=Math.max(0,QS.pgn-1);render()};$("#qnx").onclick=()=>{QS.pgn++;render()};m.querySelectorAll("tr[data-fid]").forEach(r=>r.onclick=()=>qOpen(+r.dataset.fid))}
+ if(k==="qh")m.querySelectorAll("tr[data-fid]").forEach(r=>r.onclick=()=>qOpen(+r.dataset.fid))};
+
 load();render();
 </script></body></html>
