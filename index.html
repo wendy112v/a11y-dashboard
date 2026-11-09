@@ -353,9 +353,9 @@ function analyze(P,ctx={}){
  // ---- 구조 분류
  const SO={};const listing=[];let pathX=null;
  const ei=P.findIndex(p=>/전문가 평가 페이지/.test(p.text)&&/페이지 경로/.test(p.text));
- if(M.kind==="expert"&&ei>=0){for(let i=ei;i<P.length&&!/점수 산정 방법/.test(P[i].text);i++)P[i].lines.forEach(l=>{if(isPN(l.t))return;const w=l.w;const m=/^(\d+)$/.exec(w[0]&&w[0].t||"");
+ if(M.kind==="expert"&&ei>=0){for(let i=ei;i<P.length;i++){const Ls=P[i].lines,st=Ls.findIndex(l=>/점수 산정 방법/.test(l.t)),use=st>=0?Ls.slice(0,st):Ls;use.forEach(l=>{if(isPN(l.t))return;const w=l.w;const m=/^(\d+)$/.exec(w[0]&&w[0].t||"");
    if(m&&+m[1]===listing.length+1&&w.length>=2){let cut=w.length;for(let j=2;j<w.length;j++)if(w[j].x0-w[j-1].x1>20){cut=j;break}const nm=w.slice(1,cut).map(x=>x.t).join(" "),pa=w.slice(cut).map(x=>x.t).join(" ");listing.push({n:+m[1],name:nm,path:pa,page:i+1,line:l,y:l.y,pg:i})}
-   else if(listing.length&&!/^No\b/.test(w[0]&&w[0].t||"")&&!/^\d+$/.test(w[0]&&w[0].t||"")&&/[가-힣>]/.test(l.t)){const L=listing[listing.length-1];if(L.pg===i&&l.y-L.y<24&&l.y>L.y&&l.x0>150){L.path=(L.path+" "+l.t).trim();L.y=l.y}}})}
+   else if(listing.length&&!/^No\b/.test(w[0]&&w[0].t||"")&&!/^\d+$/.test(w[0]&&w[0].t||"")&&/[가-힣>]/.test(l.t)){const L=listing[listing.length-1];if(L.pg===i&&l.y-L.y<24&&l.y>L.y&&l.x0>150){L.path=(L.path+" "+l.t).trim();L.y=l.y}}});if(st>=0)break}}
  M.list=listing;
  // 결과 페이지(전문가)
  const res={},iss=[];
