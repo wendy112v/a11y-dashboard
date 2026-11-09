@@ -410,17 +410,20 @@ function analyze(P,ctx={}){
   const mi=P.findIndex(p=>/검사 항목별 상세 결과/.test(p.text)&&p.lines.some(l=>/^항목\s*별\s*배점/.test(l.t)));let leg=null;
   if(mi>=0){const L=P[mi].lines,num=s=>s.trim().split(/\s+/);const bi=L.findIndex(l=>/^항목\s*별\s*배점/.test(l.t)),ci=L.findIndex(l=>/준수 페이지/.test(l.t)),si=L.findIndex(l=>/^유형 평가 점수/.test(l.t));
    const pts=num(L[bi].t.replace(/^항목\s*별\s*배점/,"")),ok=ci>0?num(L[ci-1].t):[],tot=ci>0&&L[ci+1]?num(L[ci+1].t):[],sc=si>=0?num(L[si].t.replace(/^유형 평가 점수/,"")):[];
-   const mrows={};L.forEach(l=>{const w=l.w;if(w.length>=20&&/^\d+$/.test(w[0].t)){const tail=w.slice(-18).map(x=>MKN(x.t));if(tail.every(Boolean))mrows[+w[0].t]={marks:tail,line:l,name:w.slice(1,-18).map(x=>x.t).join(" ")}}});
+   const mrows={};let mEnd=mi;const rowsOf=(lines,pg)=>{let n=0;lines.forEach(l=>{const w=l.w;if(w.length>=20&&/^\d+$/.test(w[0].t)){const tail=w.slice(-18).map(x=>MKN(x.t));if(tail.every(Boolean)&&!mrows[+w[0].t]){mrows[+w[0].t]={marks:tail,line:l,pg,name:w.slice(1,-18).map(x=>x.t).join(" ")};n++}}});return n};
+   rowsOf(L,mi+1);
+   // 표가 다음 페이지로 이어지는 경우(예: 22개 페이지): 결과 페이지('Np …결과')가 시작되기 전까지 표 행을 이어서 읽음
+   for(let q=mi+1;q<P.length;q++){if(/^\d+p\s*['‘’"]/.test((P[q].lines[0]||{}).t||"")||/^\d+p\s*['‘’"]/.test(P[q].text.trim().slice(0,30)))break;if(!rowsOf(P[q].lines,q+1))break;mEnd=q}
    M.matrix={rows:Object.keys(mrows).length};
    if(pts.length===18&&ok.length===18&&tot.length===18&&Object.keys(mrows).length){let allOK=true;
     for(let c=0;c<18;c++){const col=Object.values(mrows).map(r=>r.marks[c]),o=col.filter(x=>x==="O").length,x=col.filter(x=>x==="X").length;
-     if(+ok[c]!==o||+tot[c]!==o+x&&!(tot[c]==="-")){allOK=false;add({rule:"I",type:"검사 항목별 표 집계 불일치",sev:"보통",cls:"오류 의심",page:mi+1,ref:`항목 ${c+1} ${nm[c+1]}`,msg:`표의 O ${o}개·X ${x}개 ↔ 기재 준수 ${ok[c]} / 총 ${tot[c]}`,basis:"준수 페이지 수=O 개수, 총 페이지 수=O+X 개수로 검증(범례: O 준수, X 미준수, - 해당없음)",conf:"높음",box:bx(mi+1,L[ci-1])})}
+     if(+ok[c]!==o||+tot[c]!==o+x&&!(tot[c]==="-")){allOK=false;const nr=Object.keys(mrows).length,mt=Math.max(0,...tot.filter(v=>v!=="-").map(Number)),part=nr<mt;if(part){if(M.partWarn)continue;M.partWarn=1}add({rule:"I",type:part?"검사 항목별 표 집계 확인 필요(표 행 일부만 읽음)":"검사 항목별 표 집계 불일치",sev:part?"확인 필요":"보통",cls:part?"확인 필요":"오류 의심",page:mi+1,ref:`항목 ${c+1} ${nm[c+1]}`,msg:(part?"표 행을 모두 읽지 못해 항목별 O/X 집계를 확정할 수 없습니다. 예) ":"")+`표의 O ${o}개·X ${x}개 ↔ 기재 준수 ${ok[c]} / 총 ${tot[c]}`+(mEnd>mi?` (표 ${mi+1}~${mEnd+1}쪽, ${nr}행 읽음)`:""),basis:"준수 페이지 수=O 개수, 총 페이지 수=O+X 개수로 검증(범례: O 준수, X 미준수, - 해당없음)"+(part?` · 읽은 표 행 ${nr}개가 기재 총 페이지 수(최대 ${mt})보다 적음 — 표가 다음 페이지로 이어지는데 모두 읽지 못했을 수 있어 확정하지 않음`:""),conf:part?"보통":"높음",box:bx(mi+1,L[ci-1])})}
      if(ok[c]!=="-"&&tot[c]!=="-"&&pts[c]!=="-"&&+tot[c]>0&&sc[c]!==undefined){const e=Math.round(+ok[c]/+tot[c]*+pts[c]*10)/10;if(Math.abs(e-+sc[c])>0.11)add({rule:"I",type:"항목 점수 계산 불일치",sev:"보통",cls:"오류 의심",page:mi+1,ref:`항목 ${c+1} ${nm[c+1]}`,msg:`준수 ${ok[c]}÷총 ${tot[c]}×배점 ${pts[c]}=${e} ↔ 기재 ${sc[c]}`,basis:"보고서 p.3의 항목 점수 산식(준수 페이지 수 ÷ 제공 페이지 수 × 배점)",conf:"높음",box:bx(mi+1,L[si])})}}
     leg=allOK;
     // 매트릭스 vs 결과 페이지 (I)
     Object.entries(mrows).forEach(([N,mr])=>{const r=res[N];if(!r)return;for(let k=1;k<=18;k++){const a=mr.marks[k-1],b=r.marks[k];if(b&&a!==b)add({rule:"I",type:"요약표와 페이지별 결과 불일치",sev:"보통",cls:"오류 의심",page:r.pg,ref:`${N}p ${r.name} #${k}`,msg:`${nm[k]}: 페이지 결과 ${b} ↔ 검사 항목별 상세 결과표(p.${mi+1}) ${a}`,basis:"같은 페이지·항목의 기호가 두 표에서 다름",conf:"높음",box:bx(r.pg,r.rows[k]),rel:String(mi+1)})}});
     Object.keys(res).filter(k=>/^\d+$/.test(k)&&!mrows[k]).forEach(N=>add({rule:"I",type:"요약표에 없는 페이지",sev:"보통",cls:"오류 의심",page:mi+1,ref:`${N}p`,msg:`${N}p 결과가 검사 항목별 상세 결과표에 없습니다.`,basis:"표 행 수 ≠ 결과 페이지 수",conf:"보통"}));
-    Object.keys(mrows).filter(k=>!res[k]).forEach(N=>add({rule:"I",type:"결과 페이지 없는 요약표 행",sev:"보통",cls:"오류 의심",page:mi+1,ref:`${N}번`,msg:`요약표 ${N}번 행에 해당하는 페이지 결과가 없습니다.`,basis:"결과 페이지 누락 가능",conf:"보통",box:bx(mi+1,mrows[N].line)}))}
+    Object.keys(mrows).filter(k=>!res[k]).forEach(N=>add({rule:"I",type:"결과 페이지 없는 요약표 행",sev:"보통",cls:"오류 의심",page:mi+1,ref:`${N}번`,msg:`요약표 ${N}번 행에 해당하는 페이지 결과가 없습니다.`,basis:"결과 페이지 누락 가능",conf:"보통",box:bx(mrows[N].pg||mi+1,mrows[N].line)}))}
    else add({rule:"I",type:"검사 항목별 표 분석 불가",sev:"확인 필요",cls:"분석 불가",page:mi+1,msg:"배점·준수·총 페이지 행 또는 18열 표를 읽지 못했습니다.",basis:`배점 ${pts.length}열, 준수 ${ok.length}열, 총 ${tot.length}열, 표 행 ${Object.keys(mrows).length}`,conf:"산정 불가"})}
   else add({rule:"J",type:"필수 섹션 누락",sev:"보통",cls:"오류 의심",page:null,msg:"'검사 항목별 상세 결과' 표 페이지를 찾지 못했습니다.",basis:"전문가 보고서 필수 섹션",conf:"보통"});
   M.legendVerified=leg;
