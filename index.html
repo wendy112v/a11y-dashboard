@@ -482,8 +482,10 @@ function analyze(P,ctx={}){
    if(!L&&Object.keys(lst).length)add({rule:"G",type:"과업 정보에 없는 과업",sev:"보통",cls:"오류 의심",page:t.pg,ref:`과업 ${N}`,msg:`과업 ${N}이(가) 과업 정보 목록에 없습니다.`,basis:"목록 누락 또는 번호 오류",conf:"보통",box:bx(t.pg,t.hline)});
    // 아이콘 (C/D) + 요약표
    const pg=P[t.pg-1];
-   TY.forEach((k,j)=>{const r=t.res[k],ic=pg.icons?pg.icons[j]:undefined;
+   TY.forEach((k,j)=>{const r=t.res[k];let ic=pg.icons?pg.icons[j]:undefined,miss=false;
+    if(pg.icons&&pg.icons.length<3){ic=undefined;miss=true;const yy=pg.icons.ys,ry=r&&r.line?r.line.y+(r.line.h||0)/2:null;if(yy&&ry!=null){let bi=-1,bd=1e9;yy.forEach((v,q)=>{const dd=Math.abs(v-ry);if(dd<bd){bd=dd;bi=q}});if(bi>=0&&bd<=((r.line.h||10)*2.2)){ic=pg.icons[bi];miss=false}else{ic=null;miss=true}}}
     if(!r||!r.t){add({rule:"I",type:"수행 결과 문구 없음/판독 불가",sev:"보통",cls:r?"분석 불가":"오류 의심",page:t.pg,ref:`과업 ${N} ${TN[k]}`,msg:`${TN[k]} 결과 문구를 ${r?"해석하지 못했습니다":"찾지 못했습니다"}.`,basis:r?`"${r.line.t.slice(0,50)}"`:"전맹·저시력·상지 3줄이 모두 있어야 함",conf:r?"산정 불가":"높음",box:bx(t.pg,r&&r.line||t.hline)});return}
+    if(miss&&r&&r.t){add({rule:"C",type:"수행 결과 아이콘 누락 의심",sev:"높음",cls:"오류 의심",page:t.pg,ref:`과업 ${N} ${TN[k]}`,msg:`${TN[k]} 줄에 결과 아이콘이 보이지 않습니다(페이지에서 아이콘 ${pg.icons.length}개만 검출).`,basis:"과업 페이지에는 전맹·저시력·상지 3줄 모두 아이콘이 있어야 함 — 줄 위치와 가까운 아이콘이 없음",conf:"보통",box:bx(t.pg,r.line)});return}
     if(pg.icons===null||pg.icons===undefined){if(j===0)add({rule:"C",type:"수행 결과 아이콘 인식 불가",sev:"확인 필요",cls:"분석 불가",page:t.pg,ref:`과업 ${N}`,msg:"결과 줄 오른쪽의 아이콘 3개를 찾지 못했습니다(아이콘 누락 또는 렌더링 문제).",basis:"렌더링 이미지에서 노란 아이콘이 3개 검출되지 않음 — 누락 여부는 육안 확인 필요",conf:"산정 불가",box:bx(t.pg,t.hline)});return}
     if(ic===null)add({rule:"C",type:"수행 결과 아이콘 판독 불가",sev:"확인 필요",cls:"분석 불가",page:t.pg,ref:`과업 ${N} ${TN[k]}`,msg:"아이콘은 있으나 표정을 판독하지 못했습니다.",basis:"색·형태 특징이 기준과 맞지 않음",conf:"산정 불가",box:bx(t.pg,r.line)});
     else if(ic!==r.t)add({rule:"D",type:"결과 문구와 아이콘 불일치",sev:"높음",cls:"확정 오류",page:t.pg,ref:`과업 ${N} ${TN[k]}`,msg:`문구는 '${{s:"성공",m:"미흡",f:"실패"}[r.t]}'인데 아이콘은 '${{s:"성공(웃음)",m:"미흡(보통)",f:"실패(눈물)"}[ic]}'입니다.`,basis:`"${r.line.t.slice(0,40)}" ↔ 렌더링 이미지의 아이콘 색·형태 분석(눈물 파랑 픽셀·표정선 비율)`,conf:"보통",box:bx(t.pg,r.line)});
@@ -557,12 +559,14 @@ const _load0=load;load=async function(){await _load0();if(USER)await qLoad()};
 // --- PDF 읽기
 const DEFT={blankInk:0.003,dupSim:0.9,req:{}};
 function qTpl(){const t=Object.assign({},DEFT,QS.tpl||{}),o={blankInk:+t.blankInk||0.003,dupSim:+t.dupSim||0.9};if(t.reqText){o.req={};["expert","user"].forEach(k=>{if(t.reqText[k]!=null)o.req[k]=t.reqText[k].split("\n").map(l=>l.trim()).filter(Boolean).map(l=>{const[n,r]=l.split("|");try{return[n.trim(),new RegExp((r||n).trim(),"m")]}catch(e){return[n.trim(),new RegExp(n.trim().replace(/[.*+?^${}()|[\]\\]/g,"\\$&"),"m")]}})})}return o}
-function iconScan(cv){const W=cv.width,H=cv.height,d=cv.getContext("2d",{willReadFrequently:true}).getImageData(0,0,W,H).data,x0=Math.floor(W*.7),Y=(r,g,b)=>r>235&&g>180&&g<235&&b<110,rows=[];
+function iconScan(cv,sc){const W=cv.width,H=cv.height,d=cv.getContext("2d",{willReadFrequently:true}).getImageData(0,0,W,H).data,x0=Math.floor(W*.7),Y=(r,g,b)=>r>235&&g>180&&g<235&&b<110,rows=[];
  for(let y=0;y<H;y++){for(let x=x0;x<W;x++){const i=(y*W+x)*4;if(Y(d[i],d[i+1],d[i+2])){rows.push(y);break}}}
- const bl=[];let s=null,p=null;rows.forEach(y=>{if(s===null)s=p=y;else if(y-p>4){bl.push([s,p]);s=p=y}else p=y});if(s!==null)bl.push([s,p]);const out=[];
+ const bl=[];let s=null,p=null;rows.forEach(y=>{if(s===null)s=p=y;else if(y-p>4){bl.push([s,p]);s=p=y}else p=y});if(s!==null)bl.push([s,p]);const out=[],ys=[];
  bl.forEach(([a,b])=>{if(b-a<25||b-a>60)return;let xa=W,xb=0;for(let y=a;y<=b;y++)for(let x=x0;x<W;x++){const i=(y*W+x)*4;if(Y(d[i],d[i+1],d[i+2])){if(x<xa)xa=x;if(x>xb)xb=x}}
-  let blue=0,dark=0;for(let y=a;y<=b;y++)for(let x=xa;x<=xb;x++){const i=(y*W+x)*4,r=d[i],g=d[i+1],bb=d[i+2];if(bb>r+50&&bb>140)blue++;if(r<110&&g<110&&bb<110)dark++}
-  out.push(blue>=12?"f":dark>=75?"s":dark>=25?"m":null)});return out.length===3?out:null}
+  const h=b-a+1,w=xb-xa+1,ar=h*w;let blue=0,dark=0,my0=H,my1=-1;for(let y=a;y<=b;y++)for(let x=xa;x<=xb;x++){const i=(y*W+x)*4,r=d[i],g=d[i+1],bb=d[i+2];if(bb>r+50&&bb>140)blue++;if(r<110&&g<110&&bb<110){dark++;if(y>a+h*.55){if(y<my0)my0=y;if(y>my1)my1=y}}}
+  // 크기(해상도)에 상관없도록 비율로 판독: 눈물(파랑)=실패, 입 모양이 가늘고 긴 선=미흡, 그 외 입이 벌어진 웃음=성공
+  const mh=my1>=my0?(my1-my0+1)/h:0;out.push(blue/ar>=0.006?"f":dark/ar<0.015?null:mh<0.075?"m":"s");ys.push((a+b)/2/(sc||1))});
+ if(!out.length)return null;out.ys=ys;return out}
 async function qRead(doc,prog){const P=[],fails=[];
  for(let i=1;i<=doc.numPages;i++){try{const pg=await doc.getPage(i),vp=pg.getViewport({scale:1}),H=vp.height,tc=await pg.getTextContent(),it=[];
   tc.items.forEach(t=>{if(!t.str||!t.str.trim())return;const x=t.transform[4],base=H-t.transform[5],h=t.height||Math.abs(t.transform[3])||10,wd=t.width,len=t.str.length,re=/\S+/g;let m;while((m=re.exec(t.str)))it.push({t:m[0],x0:x+wd*m.index/len,x1:x+wd*(m.index+m[0].length)/len,b:base,h})});
@@ -570,7 +574,7 @@ async function qRead(doc,prog){const P=[],fails=[];
   const lines=L.map(l=>{l.w.sort((a,b)=>a.x0-b.x0);const h=Math.max(...l.w.map(x=>x.h));return{t:l.w.map(x=>x.t).join(" "),x0:l.w[0].x0,x1:Math.max(...l.w.map(x=>x.x1)),y:l.b-h,h,w:l.w.map(x=>({t:x.t,x0:x.x0,x1:x.x1}))}});
   const v2=pg.getViewport({scale:0.4}),cv=document.createElement("canvas");cv.width=Math.ceil(v2.width);cv.height=Math.ceil(v2.height);const cx=cv.getContext("2d",{willReadFrequently:true});cx.fillStyle="#fff";cx.fillRect(0,0,cv.width,cv.height);await pg.render({canvasContext:cx,viewport:v2}).promise;
   const d=cx.getImageData(0,0,cv.width,cv.height).data;let nz=0;for(let k=0;k<d.length;k+=4)if(d[k]<245||d[k+1]<245||d[k+2]<245)nz++;
-  const text=lines.map(l=>l.t).join("\n");let icons;if(/^과업\s*\d+\s*[:：]/m.test(text)&&/수행 결과/.test(text)){const v3=pg.getViewport({scale:1.5}),c3=document.createElement("canvas");c3.width=Math.ceil(v3.width);c3.height=Math.ceil(v3.height);const x3=c3.getContext("2d",{willReadFrequently:true});x3.fillStyle="#fff";x3.fillRect(0,0,c3.width,c3.height);await pg.render({canvasContext:x3,viewport:v3}).promise;icons=iconScan(c3)}
+  const text=lines.map(l=>l.t).join("\n");let icons;if(/^과업\s*\d+\s*[:：]/m.test(text)&&/수행 결과/.test(text)){const v3=pg.getViewport({scale:1.5}),c3=document.createElement("canvas");c3.width=Math.ceil(v3.width);c3.height=Math.ceil(v3.height);const x3=c3.getContext("2d",{willReadFrequently:true});x3.fillStyle="#fff";x3.fillRect(0,0,c3.width,c3.height);await pg.render({canvasContext:x3,viewport:v3}).promise;icons=iconScan(c3,1.5)}
   P.push({n:i,w:vp.width,h:H,lines,text,ink:nz/(d.length/4),icons})}catch(e){fails.push(i+"쪽: "+(e.message||e));P.push({n:i,w:595,h:842,lines:[],text:"",ink:1,failed:true})}
   prog&&prog(i,doc.numPages)}return{P,fails}}
 function slim(m){const o=Object.assign({},m);delete o.issuesE;o.list=(m.list||[]).map(x=>({n:x.n,name:x.name,path:x.path,page:x.page}));return o}
